@@ -1,0 +1,50 @@
+{
+  "name": "cat-doubler",
+  "description": "Universal scaffolder generator",
+  "version": "0.0.1",
+  "keywords": [
+    "template",
+    "generator",
+    "scaffolding",
+    "boilerplate",
+    "code-generator"
+  ],
+  "author": "Kouji Matsui (@kekyo@mi.kekyo.net)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kekyo/cat-doubler.git"
+  },
+  "homepage": "https://github.com/kekyo/cat-doubler#readme",
+  "readme": "README_pack.md",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "cat-doubler": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "images/cat-doubler-120.png"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "npm run build && vitest run",
+    "pack": "npm run build && screw-up pack --pack-destination ./artifacts"
+  },
+  "dependencies": {
+    "change-case": ">=5.4.4",
+    "commander": ">=14.0.0",
+    "glob": ">=11.0.3",
+    "handlebars": ">=4.7.8",
+    "ignore": ">=7.0.0"
+  },
+  "devDependencies": {
+    "@types/node": ">=24.3.0",
+    "dayjs": ">=1.11.18",
+    "prettier-max": ">=1.0.0",
+    "screw-up": ">=1.7.0",
+    "typescript": ">=5.4.0",
+    "vite": ">=7.0.0",
+    "vitest": ">=3.2.0"
+  }
+}

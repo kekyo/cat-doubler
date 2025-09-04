@@ -1,0 +1,278 @@
+#!/usr/bin/env node
+
+// This is part of cat-doubler, scaffolder runtime, auto generated.
+// Runtime (this file) license under MIT.
+// {{version}}-{{git_commit_hash}}
+// https://github.com/kekyo/cat-doubler
+
+// Simple arg parser (no external dependencies)
+const parseArgs = (args) => {
+  const result = { _: [] };
+  let i = 0;
+  while (i < args.length) {
+    const arg = args[i];
+    if (arg.startsWith('--')) {
+      const key = arg.slice(2);
+      const next = args[i + 1];
+      if (next && !next.startsWith('-')) {
+        result[key] = next;
+        i += 2;
+      } else {
+        result[key] = true;
+        i++;
+      }
+    } else if (arg.startsWith('-')) {
+      const key = arg.slice(1);
+      const next = args[i + 1];
+      if (next && !next.startsWith('-')) {
+        result[key] = next;
+        i += 2;
+      } else {
+        result[key] = true;
+        i++;
+      }
+    } else {
+      result._.push(arg);
+      i++;
+    }
+  }
+  return result;
+};
+
+// Interactive prompt using readline (built-in)
+const promptUser = async (message, validate) => {
+  const readline = require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  
+  return new Promise((resolve) => {
+    const ask = () => {
+      readline.question(message, (answer) => {
+        const validationResult = validate ? validate(answer) : true;
+        if (validationResult === true) {
+          readline.close();
+          resolve(answer);
+        } else {
+          console.log(validationResult);
+          ask();
+        }
+      });
+    };
+    ask();
+  });
+};
+
+// Case conversion functions (no external dependencies)
+const toCamelCase = (str) => {
+  if (!str) return '';
+  // Handle PascalCase input
+  if (/^[A-Z][a-zA-Z0-9]*$/.test(str)) {
+    return str.charAt(0).toLowerCase() + str.slice(1);
+  }
+  // Handle other cases
+  return str
+    .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) =>
+      index === 0 ? word.toLowerCase() : word.toUpperCase()
+    )
+    .replace(/[\s_-]+/g, '');
+};
+
+const toPascalCase = (str) => {
+  if (!str) return '';
+  // Already PascalCase
+  if (/^[A-Z][a-zA-Z0-9]*$/.test(str)) {
+    return str;
+  }
+  // Convert from other cases
+  return str
+    .replace(/(?:^\w|[A-Z]|\b\w)/g, word => word.toUpperCase())
+    .replace(/[\s_-]+/g, '');
+};
+
+const toKebabCase = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/[\s_]+/g, '-')
+    .toLowerCase();
+};
+
+const toSnakeCase = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .replace(/[\s-]+/g, '_')
+    .toLowerCase();
+};
+
+const toConstantCase = (str) => {
+  if (!str) return '';
+  return toSnakeCase(str).toUpperCase();
+};
+
+const toDotCase = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1.$2')
+    .replace(/[\s_-]+/g, '.')
+    .toLowerCase();
+};
+
+const toLowerCase = (str) => {
+  if (!str) return '';
+  // Remove separators and lowercase
+  return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+};
+
+const toUpperCase = (str) => {
+  if (!str) return '';
+  // Remove separators and uppercase
+  return str.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+};
+
+// Text file paths embedded at build time (with placeholders)
+const TEXT_FILE_PATHS = new Set([
+  {{#each textFilePaths}}
+  "{{this}}",
+  {{/each}}
+]);
+
+// File transformation logic
+const copyAndTransform = async (src, dest, replacements, parentPath = '') => {
+  const fs = require('fs').promises;
+  const path = require('path');
+  
+  // Ensure destination exists
+  await fs.mkdir(dest, { recursive: true });
+  
+  // Read source directory
+  const entries = await fs.readdir(src, { withFileTypes: true });
+  
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    
+    // Build the template-relative path (with placeholders)
+    const templateRelativePath = parentPath ? path.join(parentPath, entry.name) : entry.name;
+    
+    // Check if it's a text file using the embedded paths (before transformation)
+    const isText = TEXT_FILE_PATHS.has(templateRelativePath);
+    
+    // Transform the name
+    let destName = entry.name;
+    for (const [placeholder, value] of Object.entries(replacements)) {
+      destName = destName.split(placeholder).join(value);
+    }
+    
+    const destPath = path.join(dest, destName);
+    
+    if (entry.isDirectory()) {
+      // Recursively process directories with updated parent path
+      await copyAndTransform(srcPath, destPath, replacements, templateRelativePath);
+    } else {
+      
+      if (isText) {
+        // Read and transform content
+        let content = await fs.readFile(srcPath, 'utf-8');
+        for (const [placeholder, value] of Object.entries(replacements)) {
+          content = content.split(placeholder).join(value);
+        }
+        await fs.writeFile(destPath, content);
+      } else {
+        // Binary file - just copy
+        await fs.copyFile(srcPath, destPath);
+      }
+    }
+  }
+};
+
+// Main CLI logic
+const main = async () => {
+  const args = parseArgs(process.argv.slice(2));
+  
+  // Show help
+  if (args.help || args.h) {
+    console.log(`Usage: node index.js [options]
+
+Options:
+  -s, --symbolName <name>  New project name (in PascalCase)
+  -o, --outputDir <dir>    Output directory
+  -h, --help              Show this help message
+
+Examples:
+  node index.js -s MyAwesomeApp
+  node index.js --symbolName MyAwesomeApp --outputDir ./my-project
+`);
+    process.exit(0);
+  }
+  
+  // Get symbol name
+  let symbolName = args.symbolName || args.s || args._[0];
+  
+  if (!symbolName) {
+    symbolName = await promptUser(
+      'Enter the new project name (in PascalCase): ',
+      (input) => {
+        if (!input || input.length === 0) {
+          return 'Project name is required';
+        }
+        if (!/^[A-Z][a-zA-Z0-9]*$/.test(input)) {
+          return 'Please enter in PascalCase (e.g., MyProjectName)';
+        }
+        return true;
+      }
+    );
+  }
+  
+  // Validate symbol name even if provided via args
+  if (!/^[A-Z][a-zA-Z0-9]*$/.test(symbolName)) {
+    console.error('Error: Symbol name must be in PascalCase (e.g., MyProjectName)');
+    process.exit(1);
+  }
+  
+  // Get output directory
+  let outputDir = args.outputDir || args.o || args._[1];
+  
+  if (!outputDir) {
+    const defaultDir = `./output/${toKebabCase(symbolName)}`;
+    const response = await promptUser(
+      `Output directory [${defaultDir}]: `,
+      () => true
+    );
+    outputDir = response || defaultDir;
+  }
+  
+  // Generate replacement map directly from the new symbol
+  const replacements = {
+    "{{placeholders.camel}}": toCamelCase(symbolName),
+    "{{placeholders.pascal}}": toPascalCase(symbolName),
+    "{{placeholders.kebab}}": toKebabCase(symbolName),
+    "{{placeholders.snake}}": toSnakeCase(symbolName),
+    "{{placeholders.constant}}": toConstantCase(symbolName),
+    "{{placeholders.dot}}": toDotCase(symbolName),
+    "{{placeholders.lower}}": toLowerCase(symbolName),
+    "{{placeholders.upper}}": toUpperCase(symbolName)
+  }
+  
+  console.log(`Generating project with:`);
+  console.log(`  Symbol: ${symbolName}`);
+  console.log(`  Output: ${outputDir}`);
+  console.log('');
+  
+  // Copy and transform files
+  try {
+    await copyAndTransform('./templates', outputDir, replacements);
+    console.log(`Project successfully generated at ${outputDir}`);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+// Run the CLI
+if (require.main === module) {
+  main().catch(error => {
+    console.error(`Fatal error: ${error.message}`);
+    process.exit(1);
+  });
+}

@@ -17,8 +17,9 @@ Universal scaffolder generator that converts any project into reusable templates
 Looking for a simple way to turn your existing project into a reusable generator (scaffolder)?
 `cat-doubler` is the tool you need.
 
-It analyzes your source code, identifies naming patterns, and generates a ready-to-use CLI tool that can scaffold new projects with different names.
-No complex configuration required - just point it at your project and specify the symbol name to replace.
+It analyzes your source code, identifies naming patterns, and generates a ready-to-use CLI tool that can scaffold new projects with different names. No complex configuration required - just point it at your project and specify the symbol name to replace.
+
+cat-doubler itself runs in a Node.js environment, but the target project for conversion can be any type (Python packages, Go modules, Ruby gems, Java, .NET, C/C++, etc... any codebase with consistent naming patterns).
 
 For example, if you have a React component library project called `MyAwesomeComponent` into `./my-component` directory:
 
@@ -37,10 +38,10 @@ The generated CLI automatically handles all case variations (`PascalCase`, `came
 
 ## Key Features
 
-- Automatic case detection: Identifies and replaces all case variations of your symbol name
-- Zero configuration: Works out of the box with sensible defaults
-- Safe placeholder generation: Avoids naming conflicts with existing code
+- Automatic case detection: Analysing and replaces all case variations of your symbol name
+- Any target project type: Supports all types of projects, mixed projects, and management of text files that are not programming-language specific projects
 - Standalone output: Generated templates have zero runtime dependencies
+- Zero configuration: Works out of the box with sensible defaults
 - Flexible ignore patterns: Support for .catdoublerignore files similar to .gitignore
 - Automatic text/binary file detection: Automatically analyzes file contents to identify text files
 
@@ -52,6 +53,12 @@ Install as a global command:
 
 ```bash
 npm install -g cat-doubler
+```
+
+Or, if you use it in your local project:
+
+```bash
+npm install -D cat-doubler
 ```
 
 ## Usage
@@ -95,7 +102,7 @@ cat-doubler . MyAwesomePage --output ./awesome-page-template
 This will generate a scaffolder project like the following:
 
 ```
-output/
+scaffolder/
 ├── scaffolder.js    # Standalone CLI
 ├── package.json     # Minimal package configuration
 ├── README.md        # Usage instructions
@@ -108,11 +115,16 @@ output/
     └── package.json
 ```
 
-While the examples above show NPM projects, cat-doubler works with any type of project - Python packages, Go modules, Ruby gems, or any codebase with consistent naming patterns.
+Note: Using extremely simple names for symbol may cause unintended conversions.
+
+For example, specifying `App` as a symbol name will cause `Application` to be converted as well, in addition to matching instances of `App` in filenames and source code.
+As a result, if an end-user names something `FooBar`, it might be replaced with something like `FooBarlication`, preventing correct code generation.
+
+Therefore, when creating a template project, it is advisable to choose a name that is sufficiently complex and unlikely to match partial strings.
 
 ### Publishing scaffolder as NPM package
 
-The generated scaffolder is immediately ready to be published as an NPM package, allowing end users to use it directly with `npx`:
+The generated scaffolder is immediately ready to be published as an NPM package:
 
 ```bash
 # 1. Generate scaffolder from your template project
@@ -130,8 +142,12 @@ cd ./scaffolder
 
 # 4. Publish to npm registry
 npm publish --access public
+```
 
-# 5. End users can directly run the scaffolder
+Once published as a package, end users can use it directly with `npx`:
+
+```bash
+# End users can directly run the scaffolder
 npx my-awesome-page-generator
 ```
 
@@ -181,7 +197,7 @@ npx my-awesome-page-generator MyNewProject ./my-project
 
 ## Advanced Usage
 
-### Initialize Configuration File
+### Ignore Patterns
 
 Generate a default `.catdoublerignore` configuration file in current directory:
 
@@ -189,12 +205,11 @@ Generate a default `.catdoublerignore` configuration file in current directory:
 cat-doubler --ignore-init
 ```
 
-If the file already exists, it will be skipped. You can then customize this file to fit your specific project needs.
+If the file already exists, it will be skipped.
 
-### Ignore Patterns
+This file like `.gitignore`, allows you to write glob patterns to exclude specified files and directories from the template project. If the generated scaffolder does not contain the necessary files or contains extra files, you can adjust them with this file.
 
-Create or modify a `.catdoublerignore` file to exclude files and directories from the template project.
-This file format is glob patterns likely `.gitignore`:
+Here is an example:
 
 ```
 # Dependencies

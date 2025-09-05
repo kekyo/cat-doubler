@@ -32,6 +32,8 @@ export const createIgnoreManager = async (
     '.next/',
     '.nuxt/',
     'test-results/',
+    '.catdoublerignore',
+    '.catdoublertext',
   ];
 
   ig.add(defaultIgnorePatterns);

@@ -167,7 +167,7 @@ npx my-awesome-page-generator MyNewProject ./my-project
 
 ### Ignore Patterns (.catdoublerignore)
 
-Create a `.catdoublerignore` file to exclude files and directories from the template:
+Create a `.catdoublerignore` file to exclude files and directories from the template project:
 
 ```
 # Dependencies
@@ -189,6 +189,8 @@ build/
 .env*
 ```
 
+Place this file in the same directory as the template project, or specify its location using the `--ignore-file` option.
+
 ### Text File Patterns (.catdoublertext)
 
 Specify additional file extensions to treat as text files:
@@ -201,6 +203,8 @@ Specify additional file extensions to treat as text files:
 *.graphql
 *.prisma
 ```
+
+Place this file in the same directory as the template project, or specify its location using the `--text-file` option.
 
 ---
 

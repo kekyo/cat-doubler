@@ -15,7 +15,7 @@ export interface DetectedCase {
 export const detectCase = (
   str: string,
   variants: CaseVariants
-): DetectedCase | null => {
+): DetectedCase | undefined => {
   // Check each variant in priority order
   const checks: Array<[keyof CaseVariants, string]> = [
     ['constantCase', 'constantCase'],
@@ -40,7 +40,7 @@ export const detectCase = (
     }
   }
 
-  return null;
+  return undefined;
 };
 
 // Create a regex pattern that matches any case variant of the symbol

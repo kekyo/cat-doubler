@@ -17,11 +17,10 @@ export const convertToTemplate = async (
   symbolNameCaseVariants: CaseVariants,
   outputPath: string,
   ignorePath: string | undefined,
-  textPath: string | undefined,
   logger: Logger
 ): Promise<void> => {
   logger.info('Phase 1: Scanning source directory...');
-  const files = await scanDirectory(sourcePath, ignorePath, textPath, logger);
+  const files = await scanDirectory(sourcePath, ignorePath, logger);
 
   // Find safe placeholders
   const placeholders = await findSafePlaceholders(files, logger);

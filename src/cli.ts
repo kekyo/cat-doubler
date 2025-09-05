@@ -15,6 +15,7 @@ import {
 } from './generated/packageMetadata';
 import { createConsoleLogger, LogLevel } from './utils/logger';
 import { generateCaseVariants } from './utils/caseUtils';
+import { initializeConfigFiles } from './utils/configInitializer';
 
 export const runCLI = (): void => {
   const program = new Command();
@@ -28,6 +29,7 @@ export const runCLI = (): void => {
       'output the version number'
     );
 
+  // Main command for template conversion (default action)
   program
     .argument('<source-dir>', 'Source directory to convert')
     .argument('<symbol-name>', 'Symbol name to replace (in PascalCase)')
@@ -41,14 +43,11 @@ export const runCLI = (): void => {
       'Path to ignore file (default: .catdoublerignore)'
     )
     .option(
-      '--text-path <file>',
-      'Path to text file patterns file (default: .catdoublertext)'
-    )
-    .option(
       '--log-level <level>',
       'Set log level (debug, info, warn, error, ignore)',
       'info'
     )
+    .option('--init-config', 'Initialize .catdoublerignore configuration file')
     .action(
       async (
         sourceDir: string,
@@ -56,8 +55,8 @@ export const runCLI = (): void => {
         options: {
           output: string;
           ignorePath?: string;
-          textPath?: string;
           logLevel: string;
+          initConfig?: boolean;
         }
       ) => {
         // Validate log level
@@ -78,6 +77,18 @@ export const runCLI = (): void => {
 
         // Create logger
         const logger = createConsoleLogger('cat-doubler', logLevel);
+
+        // Check if --init-config option was provided
+        if (options.initConfig) {
+          logger.info('Initializing cat-doubler configuration files...\n');
+          try {
+            await initializeConfigFiles(logger);
+          } catch (error) {
+            logger.error(`Error initializing configuration files: ${error}`);
+            process.exit(1);
+          }
+          process.exit(0);
+        }
 
         try {
           logger.info(`${version}-${git_commit_hash}: Started.`);
@@ -112,7 +123,6 @@ export const runCLI = (): void => {
             symbolNameCaseVariants,
             outputPath,
             options.ignorePath,
-            options.textPath,
             logger
           );
 

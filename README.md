@@ -42,7 +42,7 @@ The generated CLI automatically handles all case variations (`PascalCase`, `came
 - Safe placeholder generation: Avoids naming conflicts with existing code
 - Standalone output: Generated templates have zero runtime dependencies
 - Flexible ignore patterns: Support for .catdoublerignore files similar to .gitignore
-- Flexible text file detection: Pattern-based, same as .gitignore globbing
+- Automatic text/binary file detection: Automatically analyzes file contents to identify text files
 
 ---
 
@@ -69,7 +69,6 @@ cat-doubler [options] <source-dir> <symbol-name>
 
 - `-o, --output <path>`: Output directory for generated template (default: `./scaffolder`)
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
-- `--text-path <file>`: Path to text file patterns (default: `.catdoublertext`)
 - `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
 - `-v, --version`: Display version number
 - `-h, --help`: Display help for command
@@ -181,6 +180,20 @@ npx my-awesome-page-generator MyNewProject ./my-project
 
 ## Advanced Usage
 
+### Initialize Configuration File
+
+Generate a default `.catdoublerignore` configuration file in your project:
+
+```bash
+cat-doubler --init-config . dummy
+```
+
+This option creates:
+
+- `.catdoublerignore`: Default ignore patterns for files and directories
+
+If the file already exists, it will be skipped. You can then customize this file to fit your specific project needs.
+
 ### Ignore Patterns (.catdoublerignore)
 
 Create a `.catdoublerignore` file to exclude files and directories from the template project:
@@ -205,22 +218,7 @@ build/
 .env*
 ```
 
-Place this file in the same directory as the template project, or specify its location using the `--ignore-file` option.
-
-### Text File Patterns (.catdoublertext)
-
-Specify additional file extensions to treat as text files:
-
-```
-# Custom text extensions
-*.vue
-*.jsx
-*.tsx
-*.graphql
-*.prisma
-```
-
-Place this file in the same directory as the template project, or specify its location using the `--text-file` option.
+Place this file in the same directory as the template project, or specify its location using the `--ignore-path` option.
 
 ---
 

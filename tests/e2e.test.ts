@@ -102,7 +102,6 @@ npx foo-bar-app
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -186,7 +185,6 @@ test('FooBarApp should work', () => {
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -222,7 +220,6 @@ test('FooBarApp should work', () => {
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -256,7 +253,6 @@ const FooBarApp = 'Original';`
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -287,7 +283,6 @@ module.exports = { FooBarApp };`
         sourceDir,
         caseVariants,
         outputDir,
-        undefined,
         undefined,
         mockLogger
       );
@@ -361,7 +356,6 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -426,7 +420,6 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -457,7 +450,6 @@ const fooBarApp = new FooBarApp();
         sourceDir,
         caseVariants,
         outputDir,
-        undefined,
         undefined,
         mockLogger
       );
@@ -494,7 +486,6 @@ const fooBarApp = new FooBarApp();
         sourceDir,
         caseVariants,
         outputDir,
-        undefined,
         undefined,
         mockLogger
       );
@@ -548,7 +539,6 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -587,7 +577,6 @@ export class FooBarApp {
         sourceDir,
         caseVariants,
         outputDir,
-        undefined,
         undefined,
         mockLogger
       );
@@ -669,7 +658,6 @@ export class FooBarApp {
         sourceDir,
         caseVariants,
         outputDir,
-        undefined,
         undefined,
         mockLogger
       );
@@ -824,7 +812,6 @@ module.exports = { FooBarApp };`
         sourceDir,
         caseVariants,
         outputDir,
-        undefined,
         undefined,
         mockLogger
       );
@@ -985,7 +972,6 @@ backup/
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -1049,7 +1035,6 @@ settings.json
         caseVariants,
         outputDir,
         customIgnorePath,
-        undefined,
         mockLogger
       );
 
@@ -1101,7 +1086,6 @@ logs/*.log
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -1134,7 +1118,6 @@ logs/*.log
           caseVariants,
           outputDir,
           nonExistentPath,
-          undefined,
           mockLogger
         )
       ).rejects.toThrow('Specified ignore file not found');
@@ -1170,7 +1153,6 @@ logs/*.log
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -1188,173 +1170,6 @@ logs/*.log
       await expect(
         access(join(outputDir, 'templates', 'dist'))
       ).rejects.toThrow();
-    });
-
-    it('should use custom text file patterns with --text-path option', async () => {
-      // Create test files with various extensions
-      await mkdir(join(sourceDir, 'src'), { recursive: true });
-      await mkdir(join(sourceDir, 'config'), { recursive: true });
-
-      await writeFile(
-        join(sourceDir, 'src', 'FooBarApp.js'),
-        'export class FooBarApp { }'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'custom.myext'),
-        'Custom extension content with FooBarApp'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'binary.dat'),
-        Buffer.from([0x00, 0xff, 0x42, 0x13])
-      );
-      await writeFile(
-        join(sourceDir, 'config', 'app.conf'),
-        'FooBarApp configuration'
-      );
-      await writeFile(join(sourceDir, 'SpecialFile'), 'FooBarApp special file');
-
-      // Create custom text patterns file
-      const customTextPath = join(testDir, 'custom.textpatterns');
-      await writeFile(
-        customTextPath,
-        `# Custom text patterns
-*.myext
-*.conf
-SpecialFile
-# Exclude .dat files (they're binary)
-!*.dat
-`
-      );
-
-      // Convert with custom text patterns file
-      const caseVariants = generateCaseVariants('FooBarApp');
-      await convertToTemplate(
-        sourceDir,
-        caseVariants,
-        outputDir,
-        undefined,
-        customTextPath,
-        mockLogger
-      );
-
-      // Verify text files are templated
-      const jsContent = await readFile(
-        join(outputDir, 'templates', 'src', '__pascal1__.js'),
-        'utf-8'
-      );
-      expect(jsContent).toContain('__pascal1__');
-
-      const myextContent = await readFile(
-        join(outputDir, 'templates', 'src', 'custom.myext'),
-        'utf-8'
-      );
-      expect(myextContent).toContain('__pascal1__');
-
-      const confContent = await readFile(
-        join(outputDir, 'templates', 'config', 'app.conf'),
-        'utf-8'
-      );
-      expect(confContent).toContain('__pascal1__');
-
-      const specialContent = await readFile(
-        join(outputDir, 'templates', 'SpecialFile'),
-        'utf-8'
-      );
-      expect(specialContent).toContain('__pascal1__');
-
-      // Verify binary file is copied as-is
-      const binaryContent = await readFile(
-        join(outputDir, 'templates', 'src', 'binary.dat')
-      );
-      expect(binaryContent).toEqual(Buffer.from([0x00, 0xff, 0x42, 0x13]));
-    });
-
-    it('should use default .catdoublertext when present', async () => {
-      // Create test files
-      await mkdir(join(sourceDir, 'src'), { recursive: true });
-
-      await writeFile(
-        join(sourceDir, 'src', 'FooBarApp.js'),
-        'export class FooBarApp { }'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'custom.special'),
-        'Special file with FooBarApp'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'data.bin'),
-        Buffer.from([0x12, 0x34, 0x56, 0x78])
-      );
-
-      // Create .catdoublertext in source directory
-      await writeFile(
-        join(sourceDir, '.catdoublertext'),
-        `# Project-specific text patterns
-*.special
-# Treat .bin files as text in this project
-*.bin
-`
-      );
-
-      // Convert without specifying text path (should use .catdoublertext)
-      const caseVariants = generateCaseVariants('FooBarApp');
-      await convertToTemplate(
-        sourceDir,
-        caseVariants,
-        outputDir,
-        undefined,
-        undefined,
-        mockLogger
-      );
-
-      // Verify custom patterns are recognized
-      const specialContent = await readFile(
-        join(outputDir, 'templates', 'src', 'custom.special'),
-        'utf-8'
-      );
-      expect(specialContent).toContain('__pascal1__');
-
-      // Note: .bin files would normally be binary, but our .catdoublertext treats them as text
-      const binContent = await readFile(
-        join(outputDir, 'templates', 'src', 'data.bin'),
-        'utf-8'
-      );
-      // Binary data won't match FooBarApp pattern, but file should be processed as text
-      expect(() => binContent.toString('utf-8')).not.toThrow();
-    });
-
-    it('should prefer --text-path over default .catdoublertext', async () => {
-      // Create test files
-      await writeFile(join(sourceDir, 'file.custom1'), 'FooBarApp in custom1');
-      await writeFile(join(sourceDir, 'file.custom2'), 'FooBarApp in custom2');
-
-      // Create default .catdoublertext that includes .custom1
-      await writeFile(join(sourceDir, '.catdoublertext'), '*.custom1');
-
-      // Create external text patterns that includes .custom2
-      const externalTextPath = join(testDir, 'external.text');
-      await writeFile(externalTextPath, '*.custom2');
-
-      // Convert with external text path (should override .catdoublertext)
-      const caseVariants = generateCaseVariants('FooBarApp');
-      await convertToTemplate(
-        sourceDir,
-        caseVariants,
-        outputDir,
-        undefined,
-        externalTextPath,
-        mockLogger
-      );
-
-      // .custom2 should be treated as text (from external file)
-      const custom2Content = await readFile(
-        join(outputDir, 'templates', 'file.custom2'),
-        'utf-8'
-      );
-      expect(custom2Content).toContain('__pascal1__');
-
-      // .custom1 might still be treated as text if default patterns include it,
-      // but it won't be from .catdoublertext since we specified external file
     });
   });
 });

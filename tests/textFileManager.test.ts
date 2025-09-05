@@ -3,380 +3,269 @@
 // Under MIT.
 // https://github.com/kekyo/cat-doubler
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { mkdir, writeFile } from 'fs/promises';
-import { join } from 'path';
-import { createTestDirectory } from './helpers/testHelper';
+import { describe, it, expect } from 'vitest';
 import {
   createTextFileManager,
-  parseTextFile,
+  createDefaultTextFileManager,
 } from '../src/utils/textFileManager';
-import { createMockLogger } from './helpers/mockLogger';
+import { createConsoleLogger } from '../src/utils/logger';
+import { join } from 'path';
+import { mkdir, writeFile, rm } from 'fs/promises';
 
 describe('Text File Manager', () => {
-  let testDir: string;
-  const mockLogger = createMockLogger();
-
-  beforeEach(async (fn) => {
-    testDir = await createTestDirectory('text-manager', fn.task.name);
-  });
+  const testDir = join(process.cwd(), 'test-temp-textfile');
+  const logger = createConsoleLogger('test', 'ignore');
 
   describe('createTextFileManager', () => {
-    it('should use default patterns when no text file exists', async () => {
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
-      );
+    it('should correctly identify text files by extension', async () => {
+      await mkdir(testDir, { recursive: true });
+      const manager = await createTextFileManager(logger);
 
-      // Check default patterns - extensions
-      expect(manager.isTextFile('src/index.js')).toBe(true);
-      expect(manager.isTextFile('src/App.tsx')).toBe(true);
-      expect(manager.isTextFile('styles.css')).toBe(true);
-      expect(manager.isTextFile('config.json')).toBe(true);
-      expect(manager.isTextFile('Program.cs')).toBe(true);
-      expect(manager.isTextFile('main.go')).toBe(true);
-      expect(manager.isTextFile('script.py')).toBe(true);
-      expect(manager.isTextFile('README.md')).toBe(true);
-
-      // Check default patterns - special filenames
-      expect(manager.isTextFile('Makefile')).toBe(true);
-      expect(manager.isTextFile('Dockerfile')).toBe(true);
-      expect(manager.isTextFile('LICENSE')).toBe(true);
-      expect(manager.isTextFile('requirements.txt')).toBe(true);
-
-      // Should not match binary files
-      expect(manager.isTextFile('logo.png')).toBe(false);
-      expect(manager.isTextFile('app.exe')).toBe(false);
-      expect(manager.isTextFile('document.pdf')).toBe(false);
-      expect(manager.isTextFile('archive.zip')).toBe(false);
-    });
-
-    it('should load patterns from .catdoublertext', async () => {
-      // Create text pattern file
+      // Create actual files with text content
+      // JavaScript/TypeScript files
       await writeFile(
-        join(testDir, '.catdoublertext'),
-        `# Test text file patterns
-*.custom
-*.myext
-special-file.bin
-src/**/*.template
-!*.exclude
-`
+        join(testDir, 'file.js'),
+        'console.log("test");',
+        'utf-8'
       );
-
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
-      );
-
-      // Test custom patterns
-      expect(manager.isTextFile('file.custom')).toBe(true);
-      expect(manager.isTextFile('test.myext')).toBe(true);
-      expect(manager.isTextFile('special-file.bin')).toBe(true);
-      expect(manager.isTextFile('src/templates/page.template')).toBe(true);
-
-      // Default patterns should still work
-      expect(manager.isTextFile('index.js')).toBe(true);
-      expect(manager.isTextFile('style.css')).toBe(true);
-      expect(manager.isTextFile('Makefile')).toBe(true);
-
-      // Non-text files
-      expect(manager.isTextFile('image.jpg')).toBe(false);
-      expect(manager.isTextFile('binary.dat')).toBe(false);
-    });
-
-    it('should load patterns from custom text file path', async () => {
-      const customTextPath = join(testDir, 'custom.textpatterns');
       await writeFile(
-        customTextPath,
-        `# Custom text patterns
-*.config
-*.settings
-build/**/*.generated
-`
+        join(testDir, 'file.ts'),
+        'const x: string = "test";',
+        'utf-8'
       );
-
-      const manager = await createTextFileManager(
-        customTextPath,
-        testDir,
-        mockLogger
-      );
-
-      expect(manager.isTextFile('app.config')).toBe(true);
-      expect(manager.isTextFile('user.settings')).toBe(true);
-      expect(manager.isTextFile('build/output/file.generated')).toBe(true);
-
-      // Default patterns still apply
-      expect(manager.isTextFile('script.js')).toBe(true);
-    });
-
-    it('should throw error when specified text file does not exist', async () => {
-      const nonExistentPath = join(testDir, 'nonexistent.text');
-
-      await expect(
-        createTextFileManager(nonExistentPath, testDir, mockLogger)
-      ).rejects.toThrow('Specified text file pattern file not found');
-    });
-
-    it('should handle complex glob patterns', async () => {
+      await writeFile(join(testDir, 'file.jsx'), '<div>Test</div>', 'utf-8');
       await writeFile(
-        join(testDir, '.catdoublertext'),
-        `# Complex patterns
-# All config files in any config directory
-**/config/*.conf
-
-# All files with double extensions
-*.min.js
-*.test.ts
-*.spec.jsx
-
-# Files in specific directories
-docs/**/*.mdx
-examples/**/*
-
-# Specific file patterns
-*.[jt]s
-*.{yaml,yml}
-`
+        join(testDir, 'file.tsx'),
+        'const App: React.FC = () => <div>Test</div>;',
+        'utf-8'
       );
 
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
-      );
+      expect(await manager.isTextFile(join(testDir, 'file.js'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'file.ts'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'file.jsx'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'file.tsx'))).toBe(true);
 
-      // Config directory patterns
-      expect(manager.isTextFile('src/config/app.conf')).toBe(true);
-      expect(manager.isTextFile('lib/config/db.conf')).toBe(true);
-
-      // Double extensions
-      expect(manager.isTextFile('bundle.min.js')).toBe(true);
-      expect(manager.isTextFile('component.test.ts')).toBe(true);
-      expect(manager.isTextFile('app.spec.jsx')).toBe(true);
-
-      // Directory specific
-      expect(manager.isTextFile('docs/guide/intro.mdx')).toBe(true);
-      expect(manager.isTextFile('examples/basic/index.html')).toBe(true);
-      expect(manager.isTextFile('examples/advanced/app.exe')).toBe(true); // matches examples/**/*
-
-      // Pattern groups
-      expect(manager.isTextFile('file.js')).toBe(true);
-      expect(manager.isTextFile('file.ts')).toBe(true);
-      expect(manager.isTextFile('config.yaml')).toBe(true);
-      expect(manager.isTextFile('config.yml')).toBe(true);
-    });
-
-    it('should handle comments and empty lines correctly', async () => {
+      // JSON files (UTF-8 required by spec)
+      await writeFile(join(testDir, 'file.json'), '{"test": true}', 'utf-8');
       await writeFile(
-        join(testDir, '.catdoublertext'),
-        `# This is a comment
-*.custom
-
-# Another comment
-  # Indented comment
-  
-  
-*.special
-# End comment`
+        join(testDir, 'file.jsonc'),
+        '// comment\n{"test": true}',
+        'utf-8'
       );
 
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
-      );
+      expect(await manager.isTextFile(join(testDir, 'file.json'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'file.jsonc'))).toBe(true);
 
-      expect(manager.isTextFile('file.custom')).toBe(true);
-      expect(manager.isTextFile('file.special')).toBe(true);
-      expect(manager.getPatternCount()).toBeGreaterThan(0);
+      // Go files (UTF-8 required by spec)
+      await writeFile(join(testDir, 'file.go'), 'package main', 'utf-8');
+      expect(await manager.isTextFile(join(testDir, 'file.go'))).toBe(true);
+
+      // Rust files (UTF-8 required by spec)
+      await writeFile(join(testDir, 'file.rs'), 'fn main() {}', 'utf-8');
+      expect(await manager.isTextFile(join(testDir, 'file.rs'))).toBe(true);
+
+      // TOML files (UTF-8 required by spec)
+      await writeFile(join(testDir, 'file.toml'), 'key = "value"', 'utf-8');
+      expect(await manager.isTextFile(join(testDir, 'file.toml'))).toBe(true);
+
+      // Clean up
+      await rm(testDir, { recursive: true, force: true });
     });
 
-    it('should match both full path and basename for special files', async () => {
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
+    it('should correctly identify binary files by extension', async () => {
+      await mkdir(testDir, { recursive: true });
+      const manager = await createTextFileManager(logger);
+
+      // Create actual binary files
+      const binaryContent = Buffer.from([0x89, 0x50, 0x4e, 0x47]); // PNG header
+
+      // Images
+      await writeFile(join(testDir, 'image.jpg'), binaryContent);
+      await writeFile(join(testDir, 'photo.png'), binaryContent);
+      await writeFile(join(testDir, 'icon.gif'), binaryContent);
+
+      expect(await manager.isTextFile(join(testDir, 'image.jpg'))).toBe(false);
+      expect(await manager.isTextFile(join(testDir, 'photo.png'))).toBe(false);
+      expect(await manager.isTextFile(join(testDir, 'icon.gif'))).toBe(false);
+
+      // Archives
+      await writeFile(join(testDir, 'archive.zip'), binaryContent);
+      await writeFile(join(testDir, 'backup.tar'), binaryContent);
+      await writeFile(join(testDir, 'compressed.gz'), binaryContent);
+
+      expect(await manager.isTextFile(join(testDir, 'archive.zip'))).toBe(
+        false
+      );
+      expect(await manager.isTextFile(join(testDir, 'backup.tar'))).toBe(false);
+      expect(await manager.isTextFile(join(testDir, 'compressed.gz'))).toBe(
+        false
       );
 
-      // Special filename patterns should match regardless of path
-      expect(manager.isTextFile('Makefile')).toBe(true);
-      expect(manager.isTextFile('src/Makefile')).toBe(true);
-      expect(manager.isTextFile('build/Dockerfile')).toBe(true);
-      expect(manager.isTextFile('docs/LICENSE')).toBe(true);
+      // Executables
+      await writeFile(join(testDir, 'app.exe'), binaryContent);
+      await writeFile(join(testDir, 'library.dll'), binaryContent);
+      await writeFile(join(testDir, 'binary.so'), binaryContent);
 
-      // Extension patterns should work with any path
-      expect(manager.isTextFile('index.js')).toBe(true);
-      expect(manager.isTextFile('src/utils/helper.js')).toBe(true);
-      expect(manager.isTextFile('deep/nested/path/component.tsx')).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'app.exe'))).toBe(false);
+      expect(await manager.isTextFile(join(testDir, 'library.dll'))).toBe(
+        false
+      );
+      expect(await manager.isTextFile(join(testDir, 'binary.so'))).toBe(false);
+
+      // Clean up
+      await rm(testDir, { recursive: true, force: true });
     });
 
-    it('should handle case sensitivity correctly', async () => {
+    it('should handle special filenames correctly', async () => {
+      await mkdir(testDir, { recursive: true });
+      const manager = await createTextFileManager(logger);
+
+      // Create actual files with special filenames that are UTF-8 required
+      await writeFile(join(testDir, 'go.mod'), 'module example', 'utf-8');
       await writeFile(
-        join(testDir, '.catdoublertext'),
-        `# Case patterns
-*.TXT
-*.Md
-README
-readme
-`
+        join(testDir, 'go.sum'),
+        'example.com/module v1.0.0',
+        'utf-8'
       );
-
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
-      );
-
-      // Test case patterns
-      expect(manager.isTextFile('file.TXT')).toBe(true);
-      expect(manager.isTextFile('document.Md')).toBe(true);
-      expect(manager.isTextFile('README')).toBe(true);
-      expect(manager.isTextFile('readme')).toBe(true);
-
-      // Default patterns are lowercase
-      expect(manager.isTextFile('script.js')).toBe(true);
-      expect(manager.isTextFile('style.css')).toBe(true);
-    });
-  });
-
-  describe('parseTextFile', () => {
-    it('should parse text file and return patterns', async () => {
-      const textFile = join(testDir, 'test.textpatterns');
       await writeFile(
-        textFile,
-        `# Header comment
-*.log
-temp/**/*
-# Mid comment
-src/**/*.template
-
-# Footer comment`
+        join(testDir, 'Cargo.toml'),
+        '[package]\nname = "test"',
+        'utf-8'
       );
-
-      const patterns = await parseTextFile(textFile);
-
-      expect(patterns).toEqual(['*.log', 'temp/**/*', 'src/**/*.template']);
-    });
-
-    it('should return empty array for empty file', async () => {
-      const textFile = join(testDir, 'empty.text');
-      await writeFile(textFile, '');
-
-      const patterns = await parseTextFile(textFile);
-      expect(patterns).toEqual([]);
-    });
-
-    it('should handle file with only comments', async () => {
-      const textFile = join(testDir, 'comments.text');
       await writeFile(
-        textFile,
-        `# Comment 1
-# Comment 2
-# Comment 3`
+        join(testDir, 'Cargo.lock'),
+        '[[package]]\nname = "test"',
+        'utf-8'
       );
 
-      const patterns = await parseTextFile(textFile);
-      expect(patterns).toEqual([]);
+      expect(await manager.isTextFile(join(testDir, 'go.mod'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'go.sum'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'Cargo.toml'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'Cargo.lock'))).toBe(true);
+
+      // Clean up
+      await rm(testDir, { recursive: true, force: true });
     });
-  });
 
-  describe('Integration with existing text file detection', () => {
-    it('should maintain backward compatibility with default patterns', async () => {
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
-      );
+    it('should detect encoding for actual files', async () => {
+      await mkdir(testDir, { recursive: true });
 
-      // All previously supported extensions should still work
-      const testFiles = [
-        // JavaScript/TypeScript
-        'app.js',
-        'App.jsx',
-        'main.ts',
-        'Component.tsx',
-        'module.mjs',
-        'common.cjs',
-        'types.mts',
-        'config.cts',
-        // Styles
-        'styles.css',
-        'theme.scss',
-        'vars.sass',
-        'mixins.less',
-        // Markup
-        'index.html',
-        'template.xml',
-        'icon.svg',
-        'App.vue',
-        // Data
-        'data.json',
-        'config.yaml',
-        'settings.toml',
-        'app.ini',
-        // .NET
-        'Program.cs',
-        'Startup.fs',
-        'Module.vb',
-        'App.csproj',
-        // C/C++
-        'main.c',
-        'header.h',
-        'app.cpp',
-        'lib.cc',
-        // Other languages
-        'script.py',
-        'Main.java',
-        'app.go',
-        'lib.rs',
-        // Docs
-        'README.md',
-        'guide.txt',
-        'api.rst',
-        // Config
-        '.env',
-        '.gitignore',
-        '.eslintrc',
-        '.prettierrc',
-        // Special files
-        'Makefile',
-        'Dockerfile',
-        'LICENSE',
-        'requirements.txt',
-      ];
+      try {
+        // Create a UTF-8 file
+        const utf8File = join(testDir, 'test.txt');
+        await writeFile(utf8File, 'Hello World', 'utf-8');
 
-      for (const file of testFiles) {
-        expect(manager.isTextFile(file)).toBe(true);
+        const manager = await createTextFileManager(logger);
+        const result = await manager.validateEncoding(utf8File);
+
+        expect(result.isTextFile).toBe(true);
+        expect(
+          ['UTF-8', 'ascii', 'ASCII'].includes(result.encoding || '')
+        ).toBe(true);
+        expect(result.requiresTemplating).toBe(true);
+      } finally {
+        await rm(testDir, { recursive: true, force: true });
       }
     });
 
-    it('should correctly identify non-text files', async () => {
-      const manager = await createTextFileManager(
-        undefined,
-        testDir,
-        mockLogger
+    it('should handle non-UTF-8 files with warning', async () => {
+      await mkdir(testDir, { recursive: true });
+
+      try {
+        // Create a file with Latin-1 encoding (simulated)
+        const latin1File = join(testDir, 'latin1.txt');
+        // Write bytes that would be Latin-1 (high bytes)
+        const buffer = Buffer.from([
+          0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0xe9, 0xe8,
+        ]); // "Hello" + accented chars
+        await writeFile(latin1File, buffer);
+
+        const manager = await createTextFileManager(logger);
+        const result = await manager.validateEncoding(latin1File);
+
+        // Should be treated as binary or detected as non-UTF-8
+        // The exact behavior depends on chardet detection
+        expect(result.requiresTemplating).toBe(false);
+      } finally {
+        await rm(testDir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe('createDefaultTextFileManager', () => {
+    it('should create a manager with no-op logger', async () => {
+      await mkdir(testDir, { recursive: true });
+      const manager = await createDefaultTextFileManager();
+
+      // Create actual files
+      await writeFile(
+        join(testDir, 'file.js'),
+        'console.log("test");',
+        'utf-8'
+      );
+      await writeFile(
+        join(testDir, 'image.jpg'),
+        Buffer.from([0xff, 0xd8, 0xff])
+      ); // JPEG header
+
+      // Should still work correctly
+      expect(await manager.isTextFile(join(testDir, 'file.js'))).toBe(true);
+      expect(await manager.isTextFile(join(testDir, 'image.jpg'))).toBe(false);
+
+      // Clean up
+      await rm(testDir, { recursive: true, force: true });
+    });
+  });
+
+  describe('Integration with file classification', () => {
+    it('should correctly classify files without needing file content', async () => {
+      await mkdir(testDir, { recursive: true });
+      const manager = await createTextFileManager(logger);
+
+      // Create actual files
+      await writeFile(
+        join(testDir, 'package.json'),
+        '{"name": "test"}',
+        'utf-8'
+      );
+      await writeFile(
+        join(testDir, 'data.bin'),
+        Buffer.from([0x00, 0x01, 0x02, 0x03])
+      );
+      await writeFile(join(testDir, 'go.mod'), 'module test', 'utf-8');
+
+      // Files that are determined by extension/name
+      expect(await manager.isTextFile(join(testDir, 'package.json'))).toBe(
+        true
+      ); // UTF-8 required
+      expect(await manager.isTextFile(join(testDir, 'data.bin'))).toBe(false); // Binary content
+      expect(await manager.isTextFile(join(testDir, 'go.mod'))).toBe(true); // UTF-8 required filename
+
+      // Clean up
+      await rm(testDir, { recursive: true, force: true });
+    });
+
+    it('should handle files with no extension', async () => {
+      await mkdir(testDir, { recursive: true });
+      const manager = await createTextFileManager(logger);
+
+      // Create files with no extension
+      await writeFile(join(testDir, 'README'), '# README', 'utf-8');
+      await writeFile(join(testDir, 'LICENSE'), 'MIT License', 'utf-8');
+      await writeFile(join(testDir, 'Makefile'), 'all:', 'utf-8');
+      await writeFile(
+        join(testDir, 'binaryfile'),
+        Buffer.from([0x00, 0x01, 0x02])
       );
 
-      const binaryFiles = [
-        'image.png',
-        'photo.jpg',
-        'icon.gif',
-        'video.mp4',
-        'app.exe',
-        'lib.dll',
-        'binary.so',
-        'archive.zip',
-        'document.pdf',
-        'spreadsheet.xlsx',
-        'data.db',
-      ];
+      // Files with no extension need content checking
+      expect(await manager.isTextFile(join(testDir, 'README'))).toBe(true); // Text content
+      expect(await manager.isTextFile(join(testDir, 'LICENSE'))).toBe(true); // Text content
+      expect(await manager.isTextFile(join(testDir, 'Makefile'))).toBe(true); // Text content
+      expect(await manager.isTextFile(join(testDir, 'binaryfile'))).toBe(false); // Binary content
 
-      for (const file of binaryFiles) {
-        expect(manager.isTextFile(file)).toBe(false);
-      }
+      // Clean up
+      await rm(testDir, { recursive: true, force: true });
     });
   });
 });

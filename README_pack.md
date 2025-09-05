@@ -16,13 +16,13 @@ Looking for a simple way to turn your existing project into a reusable generator
 
 It analyzes your source code, identifies naming patterns, and generates a ready-to-use CLI tool that can scaffold new projects with different names. No complex configuration required - just point it at your project and specify the symbol name to replace.
 
-For example, if you have a React component library called `MyAwesomeComponent`:
+For example, if you have a React component library project called `MyAwesomeComponent` into `./my-component` directory:
 
 ```bash
 cat-doubler ./my-component MyAwesomeComponent
 ```
 
-This generates a scaffolder that can create new components with any name. The following creates a project named `NewShinyComponent`:
+This generates a scaffolder that can create new components with any name. The following creates a new project named `NewShinyComponent`:
 
 ```bash
 cd ./scaffolder

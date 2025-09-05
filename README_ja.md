@@ -20,7 +20,7 @@
 ソースコードを分析し、命名パターンを特定し、異なる名前で新しいプロジェクトをスキャフォールドできる、すぐに使えるCLIツールを生成します。
 複雑な設定は不要 - プロジェクトを指定して、置換するシンボル名を指定するだけです。
 
-例えば、`MyAwesomeComponent`というReactコンポーネントライブラリプロジェクトがある場合：
+例えば、`./my-component` ディレクトリに `MyAwesomeComponent`というReactコンポーネントライブラリプロジェクトがある場合：
 
 ```bash
 cat-doubler ./my-component MyAwesomeComponent

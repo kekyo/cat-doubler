@@ -32,11 +32,13 @@
     "pack": "npm run build && screw-up pack --pack-destination ./artifacts"
   },
   "dependencies": {
-    "change-case": ">=5.4.4",
+    "change-case": ">=5.4.0",
+    "chardet": ">=2.1.0",
     "commander": ">=14.0.0",
     "glob": ">=11.0.3",
     "handlebars": ">=4.7.8",
-    "ignore": ">=7.0.0"
+    "ignore": ">=7.0.0",
+    "isbinaryfile": ">=5.0.0"
   },
   "devDependencies": {
     "@types/node": ">=24.3.0",

@@ -20,17 +20,17 @@ Looking for a simple way to turn your existing project into a reusable generator
 It analyzes your source code, identifies naming patterns, and generates a ready-to-use CLI tool that can scaffold new projects with different names.
 No complex configuration required - just point it at your project and specify the symbol name to replace.
 
-For example, if you have a React component library project called `MyAwesomeComponent`:
+For example, if you have a React component library project called `MyAwesomeComponent` into `./my-component` directory:
 
 ```bash
 cat-doubler ./my-component MyAwesomeComponent
 ```
 
-This generates a scaffolder that can create new components with any name. The following creates a project named `NewShinyComponent`:
+This generates a scaffolder that can create new components with any name. The following creates a new project named `NewShinyComponent`:
 
 ```bash
 cd ./scaffolder
-node index.js NewShinyComponent ./new-shiny-component
+node scaffolder.js NewShinyComponent ./new-shiny-component
 ```
 
 The generated CLI automatically handles all case variations (`PascalCase`, `camelCase`, `kebab-case`, `snake_case`, `CONSTANT_CASE`) throughout your entire codebase.
@@ -42,7 +42,7 @@ The generated CLI automatically handles all case variations (`PascalCase`, `came
 - Safe placeholder generation: Avoids naming conflicts with existing code
 - Standalone output: Generated templates have zero runtime dependencies
 - Flexible ignore patterns: Support for .catdoublerignore files similar to .gitignore
-- Flexible text file detection: Pattern-based, same as .gitignore globbing
+- Automatic text/binary file detection: Automatically analyzes file contents to identify text files
 
 ---
 
@@ -69,9 +69,10 @@ cat-doubler [options] <source-dir> <symbol-name>
 
 - `-o, --output <path>`: Output directory for generated template (default: `./scaffolder`)
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
-- `--text-path <file>`: Path to text file patterns (default: `.catdoublertext`)
-- `-v, --verbose`: Enable verbose logging
-- `--log-level <level>`: Set log level (debug, info, warn, error, ignore)
+- `--ignore-init`: Initialize .catdoublerignore configuration file
+- `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
+- `-v, --version`: Display version number
+- `-h, --help`: Display help for command
 
 ### Examples
 
@@ -89,6 +90,22 @@ Specify output directory with `--output`:
 
 ```bash
 cat-doubler . MyAwesomePage --output ./awesome-page-template
+```
+
+This will generate a scaffolder project like the following:
+
+```
+output/
+├── scaffolder.js    # Standalone CLI
+├── package.json     # Minimal package configuration
+├── README.md        # Usage instructions
+└── templates/       # Project containing placeholders
+    ├── src/
+    │   ├── __pascal1__.js
+    │   │        :
+    │   │        :
+    │   └── index.html
+    └── package.json
 ```
 
 While the examples above show NPM projects, cat-doubler works with any type of project - Python packages, Go modules, Ruby gems, or any codebase with consistent naming patterns.
@@ -126,7 +143,7 @@ The generated scaffolder provides an interactive interface for creating new proj
 
 ```bash
 # Simply run without arguments
-node index.js
+node scaffolder.js
 
 # You'll be prompted for:
 Enter the new project name (in PascalCase): MyNewProject
@@ -142,10 +159,10 @@ You can also provide arguments directly:
 
 ```bash
 # With positional arguments
-node index.js MyNewProject ./my-project
+node scaffolder.js MyNewProject ./my-project
 
 # Or with named options
-node index.js --symbolName MyNewProject --outputDir ./my-project
+node scaffolder.js --symbolName MyNewProject --outputDir ./my-project
 ```
 
 ### Using with npx
@@ -164,9 +181,20 @@ npx my-awesome-page-generator MyNewProject ./my-project
 
 ## Advanced Usage
 
-### Ignore Patterns (.catdoublerignore)
+### Initialize Configuration File
 
-Create a `.catdoublerignore` file to exclude files and directories from the template:
+Generate a default `.catdoublerignore` configuration file in current directory:
+
+```bash
+cat-doubler --ignore-init
+```
+
+If the file already exists, it will be skipped. You can then customize this file to fit your specific project needs.
+
+### Ignore Patterns
+
+Create or modify a `.catdoublerignore` file to exclude files and directories from the template project.
+This file format is glob patterns likely `.gitignore`:
 
 ```
 # Dependencies
@@ -188,18 +216,7 @@ build/
 .env*
 ```
 
-### Text File Patterns (.catdoublertext)
-
-Specify additional file extensions to treat as text files:
-
-```
-# Custom text extensions
-*.vue
-*.jsx
-*.tsx
-*.graphql
-*.prisma
-```
+Place this file in the same directory as the template project, or specify its location using the `--ignore-path` option.
 
 ---
 

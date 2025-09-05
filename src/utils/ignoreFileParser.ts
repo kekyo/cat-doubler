@@ -7,6 +7,7 @@ import ignore from 'ignore';
 import { readFile } from 'fs/promises';
 import { join, relative } from 'path';
 import { Logger } from './logger';
+import catdoublerignoreTemplate from '../config/catdoublerignore.template?raw';
 
 export interface IgnoreManager {
   isIgnored(filePath: string): boolean;
@@ -20,46 +21,22 @@ export const createIgnoreManager = async (
   logger: Logger
 ): Promise<IgnoreManager> => {
   const ig = ignore();
-  let totalPatternCount = 0;
 
-  // Always ignore these directories
-  const defaultIgnorePatterns = [
-    'node_modules/',
-    '.git/',
-    'dist/',
-    'build/',
-    'coverage/',
-    '.next/',
-    '.nuxt/',
-    'test-results/',
-  ];
-
-  ig.add(defaultIgnorePatterns);
-  totalPatternCount += defaultIgnorePatterns.length;
-  logger.debug(`Added ${defaultIgnorePatterns.length} default ignore patterns`);
-
-  // Read custom ignore file
+  // Read custom ignore file or use template
   const ignoreFilePath = ignorePath || join(sourcePath, '.catdoublerignore');
 
   try {
     const content = await readFile(ignoreFilePath, 'utf-8');
-    const patterns = content
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith('#'));
-
-    if (patterns.length > 0) {
-      ig.add(patterns);
-      totalPatternCount += patterns.length;
-      logger.info(`Loaded ${patterns.length} patterns from ${ignoreFilePath}`);
-    }
+    ig.add(content);
+    logger.info(`Loaded patterns from ${ignoreFilePath}`);
   } catch (error: any) {
     if (ignorePath) {
       // If a custom ignore path was specified but not found, it's an error
       throw new Error(`Specified ignore file not found: ${ignoreFilePath}`);
     }
-    // If default .catdoublerignore doesn't exist, it's fine
-    logger.debug(`.catdoublerignore not found, using only default patterns`);
+    // If default .catdoublerignore doesn't exist, use template
+    ig.add(catdoublerignoreTemplate);
+    logger.debug(`.catdoublerignore not found, using default template`);
   }
 
   return {
@@ -71,11 +48,11 @@ export const createIgnoreManager = async (
 
     addPatterns(patterns: string[]): void {
       ig.add(patterns);
-      totalPatternCount += patterns.length;
     },
 
     getPatternCount(): number {
-      return totalPatternCount;
+      // Not tracking count anymore since we use templates
+      return 0;
     },
   };
 };

@@ -36,7 +36,7 @@ export const generateCliProject = async (
   const templatesDir = join(scriptDir, 'templates');
 
   const indexTemplate = await readFile(
-    join(templatesDir, 'index.js.hbs'),
+    join(templatesDir, 'scaffolder.js.hbs'),
     'utf-8'
   );
   const packageJsonTemplate = await readFile(
@@ -59,16 +59,16 @@ export const generateCliProject = async (
     git_commit_hash,
   };
 
-  // Compile and write index.js
+  // Compile and write scaffolder.js
   const indexCompiled = Handlebars.compile(indexTemplate);
   const indexContent = indexCompiled(templateData);
-  const indexPath = join(outputPath, 'index.js');
+  const indexPath = join(outputPath, 'scaffolder.js');
   await writeFile(indexPath, indexContent);
 
-  // Make index.js executable
+  // Make scaffolder.js executable
   await chmod(indexPath, 0o755);
 
-  logger.debug('  Created index.js (executable CLI)');
+  logger.debug('  Created scaffolder.js (executable CLI)');
 
   // Compile and write package.json
   const packageJsonCompiled = Handlebars.compile(packageJsonTemplate);
@@ -97,7 +97,7 @@ dist/
   logger.debug('  Created .gitignore');
 
   logger.info(`  Generated CLI project structure:`);
-  logger.info(`    - index.js`);
+  logger.info(`    - scaffolder.js (entry point)`);
   logger.info(`    - package.json`);
   logger.info(`    - README.md`);
   logger.info(`    - templates/ (${templateFiles.length} files)`);

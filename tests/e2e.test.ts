@@ -102,7 +102,6 @@ npx foo-bar-app
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -112,16 +111,14 @@ npx foo-bar-app
         'utf-8'
       );
       expect(packageJson).toContain('foo-bar-app-generator');
-      expect(packageJson).not.toContain('plop');
       expect(JSON.parse(packageJson).dependencies).toEqual({});
 
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
       expect(indexJs).toContain('#!/usr/bin/env node');
       // Check for the new direct replacements generation
       expect(indexJs).toContain('const replacements = {');
       expect(indexJs).toContain('"__camel1__": toCamelCase(symbolName)');
       expect(indexJs).toContain('readline');
-      expect(indexJs).not.toContain('plop');
 
       const readme = await readFile(join(outputDir, 'README.md'), 'utf-8');
       expect(readme).toContain('FooBarApp scaffolding generator');
@@ -188,7 +185,6 @@ test('FooBarApp should work', () => {
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -224,7 +220,6 @@ test('FooBarApp should work', () => {
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -258,7 +253,6 @@ const FooBarApp = 'Original';`
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -278,7 +272,7 @@ const FooBarApp = 'Original';`
     it('should create a working CLI that can generate new projects', async () => {
       // Create a minimal source project
       await writeFile(
-        join(sourceDir, 'index.js'),
+        join(sourceDir, 'scaffolder.js'),
         `const FooBarApp = require('foo-bar-app');
 module.exports = { FooBarApp };`
       );
@@ -290,12 +284,11 @@ module.exports = { FooBarApp };`
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
-      // Verify the index.js is valid JavaScript
-      const { stderr } = await execAsync('node -c index.js', {
+      // Verify the scaffolder.js is valid JavaScript
+      const { stderr } = await execAsync('node -c scaffolder.js', {
         cwd: outputDir,
       });
       expect(stderr).toBe('');
@@ -363,13 +356,12 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
       // Run the generated CLI with command-line arguments
       const { stdout, stderr } = await execAsync(
-        'node ./index.js --symbolName MyAwesomeProject --outputDir ../generated-project',
+        'node ./scaffolder.js --symbolName MyAwesomeProject --outputDir ../generated-project',
         {
           cwd: outputDir,
           timeout: 30000, // 30 second timeout
@@ -428,20 +420,22 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
       // Test help output
-      const { stdout: helpOutput } = await execAsync('node ./index.js --help', {
-        cwd: outputDir,
-      });
-      expect(helpOutput).toContain('Usage: node index.js');
+      const { stdout: helpOutput } = await execAsync(
+        'node ./scaffolder.js --help',
+        {
+          cwd: outputDir,
+        }
+      );
+      expect(helpOutput).toContain('Usage: node scaffolder.js');
       expect(helpOutput).toContain('--symbolName');
       expect(helpOutput).toContain('--outputDir');
     });
 
-    it('should embed dynamic placeholders correctly in generated index.js', async () => {
+    it('should embed dynamic placeholders correctly in generated scaffolder.js', async () => {
       // Create a project without placeholder collisions
       await writeFile(
         join(sourceDir, 'app.js'),
@@ -457,12 +451,11 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
-      // Check the generated index.js has the correct placeholders
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      // Check the generated scaffolder.js has the correct placeholders
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
 
       // Should use suffix 1 when no collisions
       expect(indexJs).toContain('"__camel1__": toCamelCase(symbolName)');
@@ -494,12 +487,11 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
-      // Check the generated index.js uses suffix 2 due to collision
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      // Check the generated scaffolder.js uses suffix 2 due to collision
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
 
       expect(indexJs).toContain('"__camel2__": toCamelCase(symbolName)');
       expect(indexJs).toContain('"__pascal2__": toPascalCase(symbolName)');
@@ -547,7 +539,6 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -587,13 +578,12 @@ export class FooBarApp {
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
       // Generate a project using the CLI
       const { stdout, stderr } = await execAsync(
-        'node ./index.js --symbolName TestProject --outputDir ../test-output',
+        'node ./scaffolder.js --symbolName TestProject --outputDir ../test-output',
         {
           cwd: outputDir,
         }
@@ -669,12 +659,11 @@ export class FooBarApp {
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
-      // Check generated index.js includes text file paths with placeholders
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      // Check generated scaffolder.js includes text file paths with placeholders
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
       expect(indexJs).toContain('TEXT_FILE_PATHS');
 
       // Text files should be in TEXT_FILE_PATHS with placeholder paths
@@ -709,7 +698,7 @@ export class FooBarApp {
 
       // Generate a project using the CLI
       const { stdout, stderr } = await execAsync(
-        'node ./index.js --symbolName MyNewApp --outputDir ../generated-output',
+        'node ./scaffolder.js --symbolName MyNewApp --outputDir ../generated-output',
         {
           cwd: outputDir,
         }
@@ -788,7 +777,7 @@ export class FooBarApp {
             name: 'foo-bar-app',
             version: '1.0.0',
             description: 'FooBarApp application',
-            main: 'index.js',
+            main: 'scaffolder.js',
           },
           null,
           2
@@ -812,7 +801,7 @@ export const fooBarApp = new FooBarApp();`
       );
 
       await writeFile(
-        join(sourceDir, 'index.js'),
+        join(sourceDir, 'scaffolder.js'),
         `const { FooBarApp } = require('./src/FooBarApp');
 module.exports = { FooBarApp };`
       );
@@ -824,7 +813,6 @@ module.exports = { FooBarApp };`
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -835,7 +823,7 @@ module.exports = { FooBarApp };`
       );
       const packageData = JSON.parse(packageJson);
       expect(packageData.bin).toBeDefined();
-      expect(packageData.bin['foo-bar-app-generator']).toBe('./index.js');
+      expect(packageData.bin['foo-bar-app-generator']).toBe('./scaffolder.js');
 
       // Run npm pack
       const { stdout: packOutput } = await execAsync('npm pack --json', {
@@ -862,7 +850,7 @@ module.exports = { FooBarApp };`
 
       // Verify essential files are in the tarball
       expect(tarContents).toContain('package/package.json');
-      expect(tarContents).toContain('package/index.js');
+      expect(tarContents).toContain('package/scaffolder.js');
       expect(tarContents).toContain('package/README.md');
       expect(tarContents).toContain('package/templates/');
 
@@ -875,7 +863,7 @@ module.exports = { FooBarApp };`
         }
       );
 
-      expect(helpOutput).toContain('Usage: node index.js');
+      expect(helpOutput).toContain('Usage: node scaffolder.js');
       expect(helpOutput).toContain('--symbolName');
       expect(helpOutput).toContain('--outputDir');
       expect(helpOutput).toContain('--help');
@@ -913,7 +901,7 @@ module.exports = { FooBarApp };`
       expect(genMainFile).toContain('testPackedProject');
 
       const genIndexFile = await readFile(
-        join(packedTestDir, 'index.js'),
+        join(packedTestDir, 'scaffolder.js'),
         'utf-8'
       );
       expect(genIndexFile).toContain('TestPackedProject');
@@ -984,7 +972,6 @@ backup/
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -1048,7 +1035,6 @@ settings.json
         caseVariants,
         outputDir,
         customIgnorePath,
-        undefined,
         mockLogger
       );
 
@@ -1100,7 +1086,6 @@ logs/*.log
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -1119,7 +1104,7 @@ logs/*.log
     it('should throw error when specified ignore file does not exist', async () => {
       // Create a simple source file
       await writeFile(
-        join(sourceDir, 'index.js'),
+        join(sourceDir, 'scaffolder.js'),
         'export const FooBarApp = "app";'
       );
 
@@ -1133,7 +1118,6 @@ logs/*.log
           caseVariants,
           outputDir,
           nonExistentPath,
-          undefined,
           mockLogger
         )
       ).rejects.toThrow('Specified ignore file not found');
@@ -1169,7 +1153,6 @@ logs/*.log
         caseVariants,
         outputDir,
         undefined,
-        undefined,
         mockLogger
       );
 
@@ -1187,173 +1170,6 @@ logs/*.log
       await expect(
         access(join(outputDir, 'templates', 'dist'))
       ).rejects.toThrow();
-    });
-
-    it('should use custom text file patterns with --text-path option', async () => {
-      // Create test files with various extensions
-      await mkdir(join(sourceDir, 'src'), { recursive: true });
-      await mkdir(join(sourceDir, 'config'), { recursive: true });
-
-      await writeFile(
-        join(sourceDir, 'src', 'FooBarApp.js'),
-        'export class FooBarApp { }'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'custom.myext'),
-        'Custom extension content with FooBarApp'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'binary.dat'),
-        Buffer.from([0x00, 0xff, 0x42, 0x13])
-      );
-      await writeFile(
-        join(sourceDir, 'config', 'app.conf'),
-        'FooBarApp configuration'
-      );
-      await writeFile(join(sourceDir, 'SpecialFile'), 'FooBarApp special file');
-
-      // Create custom text patterns file
-      const customTextPath = join(testDir, 'custom.textpatterns');
-      await writeFile(
-        customTextPath,
-        `# Custom text patterns
-*.myext
-*.conf
-SpecialFile
-# Exclude .dat files (they're binary)
-!*.dat
-`
-      );
-
-      // Convert with custom text patterns file
-      const caseVariants = generateCaseVariants('FooBarApp');
-      await convertToTemplate(
-        sourceDir,
-        caseVariants,
-        outputDir,
-        undefined,
-        customTextPath,
-        mockLogger
-      );
-
-      // Verify text files are templated
-      const jsContent = await readFile(
-        join(outputDir, 'templates', 'src', '__pascal1__.js'),
-        'utf-8'
-      );
-      expect(jsContent).toContain('__pascal1__');
-
-      const myextContent = await readFile(
-        join(outputDir, 'templates', 'src', 'custom.myext'),
-        'utf-8'
-      );
-      expect(myextContent).toContain('__pascal1__');
-
-      const confContent = await readFile(
-        join(outputDir, 'templates', 'config', 'app.conf'),
-        'utf-8'
-      );
-      expect(confContent).toContain('__pascal1__');
-
-      const specialContent = await readFile(
-        join(outputDir, 'templates', 'SpecialFile'),
-        'utf-8'
-      );
-      expect(specialContent).toContain('__pascal1__');
-
-      // Verify binary file is copied as-is
-      const binaryContent = await readFile(
-        join(outputDir, 'templates', 'src', 'binary.dat')
-      );
-      expect(binaryContent).toEqual(Buffer.from([0x00, 0xff, 0x42, 0x13]));
-    });
-
-    it('should use default .catdoublertext when present', async () => {
-      // Create test files
-      await mkdir(join(sourceDir, 'src'), { recursive: true });
-
-      await writeFile(
-        join(sourceDir, 'src', 'FooBarApp.js'),
-        'export class FooBarApp { }'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'custom.special'),
-        'Special file with FooBarApp'
-      );
-      await writeFile(
-        join(sourceDir, 'src', 'data.bin'),
-        Buffer.from([0x12, 0x34, 0x56, 0x78])
-      );
-
-      // Create .catdoublertext in source directory
-      await writeFile(
-        join(sourceDir, '.catdoublertext'),
-        `# Project-specific text patterns
-*.special
-# Treat .bin files as text in this project
-*.bin
-`
-      );
-
-      // Convert without specifying text path (should use .catdoublertext)
-      const caseVariants = generateCaseVariants('FooBarApp');
-      await convertToTemplate(
-        sourceDir,
-        caseVariants,
-        outputDir,
-        undefined,
-        undefined,
-        mockLogger
-      );
-
-      // Verify custom patterns are recognized
-      const specialContent = await readFile(
-        join(outputDir, 'templates', 'src', 'custom.special'),
-        'utf-8'
-      );
-      expect(specialContent).toContain('__pascal1__');
-
-      // Note: .bin files would normally be binary, but our .catdoublertext treats them as text
-      const binContent = await readFile(
-        join(outputDir, 'templates', 'src', 'data.bin'),
-        'utf-8'
-      );
-      // Binary data won't match FooBarApp pattern, but file should be processed as text
-      expect(() => binContent.toString('utf-8')).not.toThrow();
-    });
-
-    it('should prefer --text-path over default .catdoublertext', async () => {
-      // Create test files
-      await writeFile(join(sourceDir, 'file.custom1'), 'FooBarApp in custom1');
-      await writeFile(join(sourceDir, 'file.custom2'), 'FooBarApp in custom2');
-
-      // Create default .catdoublertext that includes .custom1
-      await writeFile(join(sourceDir, '.catdoublertext'), '*.custom1');
-
-      // Create external text patterns that includes .custom2
-      const externalTextPath = join(testDir, 'external.text');
-      await writeFile(externalTextPath, '*.custom2');
-
-      // Convert with external text path (should override .catdoublertext)
-      const caseVariants = generateCaseVariants('FooBarApp');
-      await convertToTemplate(
-        sourceDir,
-        caseVariants,
-        outputDir,
-        undefined,
-        externalTextPath,
-        mockLogger
-      );
-
-      // .custom2 should be treated as text (from external file)
-      const custom2Content = await readFile(
-        join(outputDir, 'templates', 'file.custom2'),
-        'utf-8'
-      );
-      expect(custom2Content).toContain('__pascal1__');
-
-      // .custom1 might still be treated as text if default patterns include it,
-      // but it won't be from .catdoublertext since we specified external file
     });
   });
 });

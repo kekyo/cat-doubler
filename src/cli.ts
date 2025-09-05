@@ -15,6 +15,7 @@ import {
 } from './generated/packageMetadata';
 import { createConsoleLogger, LogLevel } from './utils/logger';
 import { generateCaseVariants } from './utils/caseUtils';
+import { initializeConfigFiles } from './utils/configInitializer';
 
 export const runCLI = (): void => {
   const program = new Command();
@@ -22,12 +23,16 @@ export const runCLI = (): void => {
   program
     .name(name)
     .description(description)
-    .version(`${version}-${git_commit_hash}`);
+    .version(
+      `${version}-${git_commit_hash}`,
+      '-v, --version',
+      'output the version number'
+    );
 
+  // Main command for template conversion (default action)
   program
-    .description('Convert a source directory into a Plop.js template')
-    .argument('<source-dir>', 'Source directory to convert')
-    .argument('<symbol-name>', 'Symbol name to replace (in PascalCase)')
+    .argument('[source-dir]', 'Source directory to convert')
+    .argument('[symbol-name]', 'Symbol name to replace (in PascalCase)')
     .option(
       '-o, --output <path>',
       'Output directory for the generated template',
@@ -38,15 +43,11 @@ export const runCLI = (): void => {
       'Path to ignore file (default: .catdoublerignore)'
     )
     .option(
-      '--text-path <file>',
-      'Path to text file patterns file (default: .catdoublertext)'
-    )
-    .option('-v, --verbose', 'Enable verbose logging', false)
-    .option(
       '--log-level <level>',
       'Set log level (debug, info, warn, error, ignore)',
       'info'
     )
+    .option('--ignore-init', 'Initialize .catdoublerignore configuration file')
     .action(
       async (
         sourceDir: string,
@@ -54,9 +55,8 @@ export const runCLI = (): void => {
         options: {
           output: string;
           ignorePath?: string;
-          textPath?: string;
-          verbose: boolean;
           logLevel: string;
+          ignoreInit?: boolean;
         }
       ) => {
         // Validate log level
@@ -67,9 +67,7 @@ export const runCLI = (): void => {
           'error',
           'ignore',
         ];
-        const logLevel = (
-          options.verbose ? 'debug' : options.logLevel
-        ) as LogLevel;
+        const logLevel = options.logLevel as LogLevel;
         if (!validLogLevels.includes(logLevel)) {
           console.error(
             `Error: Invalid log level "${options.logLevel}". Must be one of: ${validLogLevels.join(', ')}`
@@ -79,6 +77,30 @@ export const runCLI = (): void => {
 
         // Create logger
         const logger = createConsoleLogger('cat-doubler', logLevel);
+
+        // Check if --ignore-init option was provided
+        if (options.ignoreInit) {
+          logger.info('Initializing .catdoublerignore configuration file...\n');
+          try {
+            await initializeConfigFiles(logger);
+          } catch (error) {
+            logger.error(`Error initializing configuration file: ${error}`);
+            process.exit(1);
+          }
+          process.exit(0);
+        }
+
+        // If --ignore-init is not provided, source-dir and symbol-name are required
+        if (!sourceDir || !symbolName) {
+          logger.error(
+            'Error: source-dir and symbol-name arguments are required'
+          );
+          logger.info(
+            'Usage: cat-doubler <source-dir> <symbol-name> [options]'
+          );
+          logger.info('   or: cat-doubler --ignore-init');
+          process.exit(1);
+        }
 
         try {
           logger.info(`${version}-${git_commit_hash}: Started.`);
@@ -107,17 +129,12 @@ export const runCLI = (): void => {
           logger.info(`Converting "${sourceDir}" with symbol "${symbolName}"`);
           logger.info(`Output directory: ${outputPath}`);
 
-          if (logLevel === 'debug') {
-            logger.debug('Debug logging enabled');
-          }
-
           // Perform the conversion
           await convertToTemplate(
             sourcePath,
             symbolNameCaseVariants,
             outputPath,
             options.ignorePath,
-            options.textPath,
             logger
           );
 

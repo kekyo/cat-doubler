@@ -192,7 +192,7 @@ const main = async () => {
   
   // Show help
   if (args.help || args.h) {
-    console.log(`Usage: node index.js [options]
+    console.log(`Usage: node scaffolder.js [options]
 
 Options:
   -s, --symbolName <name>  New project name (in PascalCase)
@@ -200,8 +200,8 @@ Options:
   -h, --help              Show this help message
 
 Examples:
-  node index.js -s MyAwesomeApp
-  node index.js --symbolName MyAwesomeApp --outputDir ./my-project
+  node scaffolder.js -s MyAwesomeApp
+  node scaffolder.js --symbolName MyAwesomeApp --outputDir ./my-project
 `);
     process.exit(0);
   }

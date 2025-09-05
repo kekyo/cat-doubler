@@ -68,12 +68,7 @@ describe('Text file tracking with placeholders', () => {
     await createTestStructure();
 
     // Scan files
-    const files = await scanDirectory(
-      testDir,
-      undefined,
-      undefined,
-      mockLogger
-    );
+    const files = await scanDirectory(testDir, undefined, mockLogger);
     const caseVariants = generateCaseVariants('FooBarApp');
     const placeholders = await findSafePlaceholders(files, mockLogger);
 
@@ -122,12 +117,7 @@ describe('Text file tracking with placeholders', () => {
       'name: FooBarApp'
     );
 
-    const files = await scanDirectory(
-      testDir,
-      undefined,
-      undefined,
-      mockLogger
-    );
+    const files = await scanDirectory(testDir, undefined, mockLogger);
     const caseVariants = generateCaseVariants('FooBarApp');
     const placeholders = await findSafePlaceholders(files, mockLogger);
 
@@ -169,12 +159,7 @@ describe('Text file tracking with placeholders', () => {
       Buffer.from([0x25, 0x50, 0x44, 0x46]) // PDF header
     );
 
-    const files = await scanDirectory(
-      testDir,
-      undefined,
-      undefined,
-      mockLogger
-    );
+    const files = await scanDirectory(testDir, undefined, mockLogger);
 
     // All binary files should NOT be text files
     const binaryFiles = files.filter(
@@ -194,14 +179,12 @@ describe('Text file tracking with placeholders', () => {
     await writeFile(join(testDir, 'README'), '# Project README');
     await writeFile(join(testDir, 'LICENSE'), 'MIT License');
     await writeFile(join(testDir, 'Dockerfile'), 'FROM node:18');
-    await writeFile(join(testDir, 'randomfile'), 'Some content'); // Not in TEXT_FILENAMES
+    await writeFile(
+      join(testDir, 'randomfile'),
+      Buffer.from([0x00, 0x01, 0x02, 0x03])
+    ); // Binary content
 
-    const files = await scanDirectory(
-      testDir,
-      undefined,
-      undefined,
-      mockLogger
-    );
+    const files = await scanDirectory(testDir, undefined, mockLogger);
 
     // Check known text files without extensions
     const readme = files.find((f) => f.relativePath === 'README');
@@ -212,7 +195,7 @@ describe('Text file tracking with placeholders', () => {
     expect(readme?.isTextFile).toBe(true);
     expect(license?.isTextFile).toBe(true);
     expect(dockerfile?.isTextFile).toBe(true);
-    expect(randomFile?.isTextFile).toBe(false); // Not in TEXT_FILENAMES
+    expect(randomFile?.isTextFile).toBe(false); // Binary content
   });
 
   it('should preserve directory structure in placeholder paths', async () => {
@@ -233,12 +216,7 @@ describe('Text file tracking with placeholders', () => {
       'test("app", () => {});'
     );
 
-    const files = await scanDirectory(
-      testDir,
-      undefined,
-      undefined,
-      mockLogger
-    );
+    const files = await scanDirectory(testDir, undefined, mockLogger);
     const caseVariants = generateCaseVariants('FooBarApp');
     const placeholders = await findSafePlaceholders(files, mockLogger);
 
@@ -279,12 +257,7 @@ describe('Text file tracking with placeholders', () => {
       await writeFile(join(testDir, 'test-extensions', path), content);
     }
 
-    const files = await scanDirectory(
-      testDir,
-      undefined,
-      undefined,
-      mockLogger
-    );
+    const files = await scanDirectory(testDir, undefined, mockLogger);
 
     // All should be identified as text files
     const textFiles = files.filter(

@@ -1,0 +1,60 @@
+# cat-doubler ignore patterns
+# https://github.com/kekyo/cat-doubler
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+coverage/
+.next/
+.nuxt/
+test-results/
+obj/
+Debug/
+Release/
+
+# Version control
+.git/
+.svn/
+.hg/
+
+# cat-doubler config files
+.catdoublerignore
+.catdoublertext
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.bak
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

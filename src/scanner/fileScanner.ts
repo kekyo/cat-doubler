@@ -22,7 +22,6 @@ export interface ScannedFile {
 export const scanDirectory = async (
   sourcePath: string,
   ignorePath: string | undefined,
-  textPath: string | undefined,
   logger: Logger
 ): Promise<ScannedFile[]> => {
   const files: ScannedFile[] = [];
@@ -35,11 +34,7 @@ export const scanDirectory = async (
   );
 
   // Create text file manager
-  const textFileManager = await createTextFileManager(
-    textPath,
-    sourcePath,
-    logger
-  );
+  const textFileManager = await createTextFileManager(logger);
 
   logger.debug(`Scanning directory: ${sourcePath}`);
 
@@ -74,7 +69,10 @@ export const scanDirectory = async (
         isDirectory: true,
       });
     } else {
-      const classification = classifyFileWithManager(file, textFileManager);
+      const classification = await classifyFileWithManager(
+        absolutePath,
+        textFileManager
+      );
 
       files.push({
         relativePath: file,

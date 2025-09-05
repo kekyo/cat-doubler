@@ -25,7 +25,7 @@ export const replaceSymbolInContent = (
 
   // Order matters: replace longer variants first to avoid partial replacements
   const orderedVariants: Array<
-    [keyof CaseVariants, keyof PlaceholderSet | null]
+    [keyof CaseVariants, keyof PlaceholderSet | undefined]
   > = [
     ['constantCase', 'constant'],
     ['upperCase', 'upper'],
@@ -35,7 +35,7 @@ export const replaceSymbolInContent = (
     ['snakeCase', 'snake'],
     ['dotCase', 'dot'],
     ['lowerCase', 'lower'],
-    ['pathCase', null], // No direct placeholder for pathCase
+    ['pathCase', undefined], // No direct placeholder for pathCase
   ];
 
   for (const [variantKey, placeholderKey] of orderedVariants) {
@@ -129,7 +129,7 @@ export const replaceSymbolInPath = (
     // Check each variant in the segment
     const variantToPlaceholder: Record<
       keyof CaseVariants,
-      keyof PlaceholderSet | null
+      keyof PlaceholderSet | undefined
     > = {
       constantCase: 'constant',
       pascalCase: 'pascal',
@@ -137,8 +137,8 @@ export const replaceSymbolInPath = (
       kebabCase: 'kebab',
       snakeCase: 'snake',
       dotCase: 'dot',
-      pathCase: null, // pathCase is not supported
-      original: null,
+      pathCase: undefined, // pathCase is not supported
+      original: undefined,
       lowerCase: 'lower',
       upperCase: 'upper',
     };

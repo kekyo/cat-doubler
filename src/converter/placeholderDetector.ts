@@ -39,8 +39,8 @@ export const findSafePlaceholders = async (
     });
   }
 
-  // Scan file contents for existing strings
-  for (const file of files) {
+  // Scan file contents for existing strings (parallel processing)
+  const fileReadPromises = files.map(async (file) => {
     if (file.requiresTemplating && !file.isDirectory) {
       try {
         const content = await readFile(file.absolutePath, 'utf-8');
@@ -49,8 +49,10 @@ export const findSafePlaceholders = async (
         // Match sequences that look like __something__
         const placeholderPattern = /__[a-zA-Z0-9]+__/g;
         const matches = content.match(placeholderPattern);
+        const foundStrings: string[] = [];
+
         if (matches) {
-          matches.forEach((match) => existingStrings.add(match));
+          matches.forEach((match) => foundStrings.push(match));
         }
 
         // Also check for our specific pattern variations
@@ -58,17 +60,29 @@ export const findSafePlaceholders = async (
         if (words) {
           words.forEach((word) => {
             if (word.includes('__')) {
-              existingStrings.add(word);
+              foundStrings.push(word);
             }
           });
         }
+
+        return foundStrings;
       } catch (error) {
         logger.debug(
           `  Warning: Could not read file ${file.relativePath}: ${error}`
         );
+        return [];
       }
     }
-  }
+    return [];
+  });
+
+  // Wait for all file reads to complete
+  const allFoundStrings = await Promise.all(fileReadPromises);
+
+  // Add all found strings to the existing strings set
+  allFoundStrings.forEach((strings) => {
+    strings.forEach((str) => existingStrings.add(str));
+  });
 
   // Find safe placeholder names
   let counter = 1;

@@ -31,8 +31,8 @@ export const runCLI = (): void => {
 
   // Main command for template conversion (default action)
   program
-    .argument('<source-dir>', 'Source directory to convert')
-    .argument('<symbol-name>', 'Symbol name to replace (in PascalCase)')
+    .argument('[source-dir]', 'Source directory to convert')
+    .argument('[symbol-name]', 'Symbol name to replace (in PascalCase)')
     .option(
       '-o, --output <path>',
       'Output directory for the generated template',
@@ -47,7 +47,7 @@ export const runCLI = (): void => {
       'Set log level (debug, info, warn, error, ignore)',
       'info'
     )
-    .option('--init-config', 'Initialize .catdoublerignore configuration file')
+    .option('--ignore-init', 'Initialize .catdoublerignore configuration file')
     .action(
       async (
         sourceDir: string,
@@ -56,7 +56,7 @@ export const runCLI = (): void => {
           output: string;
           ignorePath?: string;
           logLevel: string;
-          initConfig?: boolean;
+          ignoreInit?: boolean;
         }
       ) => {
         // Validate log level
@@ -78,16 +78,28 @@ export const runCLI = (): void => {
         // Create logger
         const logger = createConsoleLogger('cat-doubler', logLevel);
 
-        // Check if --init-config option was provided
-        if (options.initConfig) {
-          logger.info('Initializing cat-doubler configuration files...\n');
+        // Check if --ignore-init option was provided
+        if (options.ignoreInit) {
+          logger.info('Initializing .catdoublerignore configuration file...\n');
           try {
             await initializeConfigFiles(logger);
           } catch (error) {
-            logger.error(`Error initializing configuration files: ${error}`);
+            logger.error(`Error initializing configuration file: ${error}`);
             process.exit(1);
           }
           process.exit(0);
+        }
+
+        // If --ignore-init is not provided, source-dir and symbol-name are required
+        if (!sourceDir || !symbolName) {
+          logger.error(
+            'Error: source-dir and symbol-name arguments are required'
+          );
+          logger.info(
+            'Usage: cat-doubler <source-dir> <symbol-name> [options]'
+          );
+          logger.info('   or: cat-doubler --ignore-init');
+          process.exit(1);
         }
 
         try {

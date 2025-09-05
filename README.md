@@ -69,6 +69,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 
 - `-o, --output <path>`: Output directory for generated template (default: `./scaffolder`)
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
+- `--ignore-init`: Initialize .catdoublerignore configuration file
 - `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
 - `-v, --version`: Display version number
 - `-h, --help`: Display help for command
@@ -182,21 +183,18 @@ npx my-awesome-page-generator MyNewProject ./my-project
 
 ### Initialize Configuration File
 
-Generate a default `.catdoublerignore` configuration file in your project:
+Generate a default `.catdoublerignore` configuration file in current directory:
 
 ```bash
-cat-doubler --init-config . dummy
+cat-doubler --ignore-init
 ```
-
-This option creates:
-
-- `.catdoublerignore`: Default ignore patterns for files and directories
 
 If the file already exists, it will be skipped. You can then customize this file to fit your specific project needs.
 
-### Ignore Patterns (.catdoublerignore)
+### Ignore Patterns
 
-Create a `.catdoublerignore` file to exclude files and directories from the template project:
+Create or modify a `.catdoublerignore` file to exclude files and directories from the template project.
+This file format is glob patterns likely `.gitignore`:
 
 ```
 # Dependencies

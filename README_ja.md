@@ -70,7 +70,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 
 - `-o, --output <path>`: 生成されたテンプレートの出力ディレクトリ（デフォルト：`./scaffolder`）
 - `--ignore-path <file>`: 除外ファイルのパス（デフォルト：`.catdoublerignore`）
-- `--init-config`: `.catdoublerignore`を生成します（後述）
+- `--ignore-init`: `.catdoublerignore`設定ファイルを初期化
 - `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）（デフォルト：`info`）
 - `-v, --version`: バージョン番号を表示
 - `-h, --help`: コマンドのヘルプを表示
@@ -187,36 +187,33 @@ npx my-awesome-page-generator MyNewProject ./my-project
 カレントディレクトリに、デフォルトの`.catdoublerignore`設定ファイルを生成します：
 
 ```bash
-cat-doubler --init-config . dummy
+cat-doubler --ignore-init
 ```
-
-このオプションは以下を作成します：
-
-- `.catdoublerignore`: ファイルとディレクトリのデフォルト除外パターン
 
 ファイルが既に存在する場合はスキップされます。その後、特定のプロジェクトのニーズに合わせてこのファイルをカスタマイズできます。
 
-### 除外パターン（.catdoublerignore）
+### 除外パターン
 
-`.catdoublerignore`ファイルを作成または編集して、テンプレートプロジェクトから、指定されたファイルとディレクトリを除外出来ます：
+`.catdoublerignore`ファイルを作成または編集して、テンプレートプロジェクトから、指定されたファイルとディレクトリを除外出来ます。
+このファイルは`.gitignore`と同じように、グロブパターンを記述できます：
 
 ```
-# 依存関係
+# Dependencies
 node_modules/
 *.lock
 package-lock.json
 
-# ビルド出力
+# Build outputs
 dist/
 build/
 *.min.js
 
-# IDEファイル
+# IDE files
 .vscode/
 .idea/
 *.swp
 
-# 環境ファイル
+# Environment files
 .env*
 ```
 

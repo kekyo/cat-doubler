@@ -14,15 +14,15 @@ export interface FileClassification {
 }
 
 // Function that uses TextFileManager for text file detection
-export const classifyFileWithManager = (
+export const classifyFileWithManager = async (
   filePath: string,
   textFileManager: TextFileManager
-): FileClassification => {
+): Promise<FileClassification> => {
   const ext = extname(filePath).toLowerCase();
   const filename = basename(filePath);
 
   // Use TextFileManager for text file detection
-  const isTextFile = textFileManager.isTextFile(filePath);
+  const isTextFile = await textFileManager.isTextFile(filePath);
   const requiresTemplating = isTextFile;
 
   return {

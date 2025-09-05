@@ -43,7 +43,7 @@ node scaffolder.js NewShinyComponent ./new-shiny-component
 - 安全なプレースホルダー生成: 既存コードとの名前衝突を回避
 - スタンドアロン出力: 生成されたテンプレートは実行時の依存関係ゼロ
 - 柔軟な除外パターン: .gitignoreと同じglob形式の、.catdoublerignoreファイルをサポート
-- 柔軟なテキストファイル検出: .gitignoreと同じglob形式の、.catdoublertextファイルをサポート
+- 自動テキスト/バイナリファイル検出: ファイル内容を自動的に分析してテキストファイルを識別
 
 ---
 
@@ -70,7 +70,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 
 - `-o, --output <path>`: 生成されたテンプレートの出力ディレクトリ（デフォルト：`./scaffolder`）
 - `--ignore-path <file>`: 除外ファイルのパス（デフォルト：`.catdoublerignore`）
-- `--text-path <file>`: テキストファイルパターンのパス（デフォルト：`.catdoublertext`）
+- `--ignore-init`: `.catdoublerignore`設定ファイルを初期化
 - `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）（デフォルト：`info`）
 - `-v, --version`: バージョン番号を表示
 - `-h, --help`: コマンドのヘルプを表示
@@ -182,46 +182,40 @@ npx my-awesome-page-generator MyNewProject ./my-project
 
 ## 高度な使い方
 
-### 除外パターン（.catdoublerignore）
+### 設定ファイルの初期化
 
-`.catdoublerignore`ファイルを作成して、テンプレートプロジェクトからファイルとディレクトリを除外出来ます：
+カレントディレクトリに、デフォルトの`.catdoublerignore`設定ファイルを生成します：
+
+```bash
+cat-doubler --ignore-init
+```
+
+ファイルが既に存在する場合はスキップされます。その後、特定のプロジェクトのニーズに合わせてこのファイルをカスタマイズできます。
+
+### 除外パターン
+
+`.catdoublerignore`ファイルを作成または編集して、テンプレートプロジェクトから、指定されたファイルとディレクトリを除外出来ます。
+このファイルは`.gitignore`と同じように、グロブパターンを記述できます：
 
 ```
-# 依存関係
+# Dependencies
 node_modules/
 *.lock
 package-lock.json
 
-# ビルド出力
+# Build outputs
 dist/
 build/
 *.min.js
 
-# IDEファイル
+# IDE files
 .vscode/
 .idea/
 *.swp
 
-# 環境ファイル
+# Environment files
 .env*
 ```
-
-このファイルは、テンプレートプロジェクトと同じディレクトリに配置するか、または`--ignore-file`オプションで位置を指定します。
-
-### テキストファイルパターン（.catdoublertext）
-
-テキストファイルとして扱う追加のファイル拡張子を指定出来ます：
-
-```
-# カスタムテキスト拡張子
-*.vue
-*.jsx
-*.tsx
-*.graphql
-*.prisma
-```
-
-このファイルは、テンプレートプロジェクトと同じディレクトリに配置するか、または`--text-file`オプションで位置を指定します。
 
 ---
 

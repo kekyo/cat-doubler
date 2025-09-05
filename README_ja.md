@@ -93,6 +93,22 @@ cat-doubler . MyAwsomePage
 cat-doubler . MyAwsomePage --output ./awsome-page-template
 ```
 
+これにより、以下のようなスキャフォールダープロジェクトが生成されます:
+
+```
+output/
+├── scaffolder.js    # スタンドアロンCLI
+├── package.json     # 最小限のパッケージ設定
+├── README.md        # 使用方法の説明
+└── templates/       # プレースホルダーを含むプロジェクト
+    ├── src/
+    │   ├── __pascal1__.js
+    │   │        :
+    │   │        :
+    │   └── index.html
+    └── package.json
+```
+
 上記の例ではNPMプロジェクトを示していますが、cat-doublerはあらゆるタイプのプロジェクト（Pythonパッケージ、Goモジュール、Ruby gem、一貫した命名パターンを持つ任意のコードベース）で動作します。
 
 ### スキャフォルダーをNPMパッケージとして公開

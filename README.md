@@ -92,6 +92,22 @@ Specify output directory with `--output`:
 cat-doubler . MyAwesomePage --output ./awesome-page-template
 ```
 
+This will generate a scaffolder project like the following:
+
+```
+output/
+├── scaffolder.js    # Standalone CLI
+├── package.json     # Minimal package configuration
+├── README.md        # Usage instructions
+└── templates/       # Project containing placeholders
+    ├── src/
+    │   ├── __pascal1__.js
+    │   │        :
+    │   │        :
+    │   └── index.html
+    └── package.json
+```
+
 While the examples above show NPM projects, cat-doubler works with any type of project - Python packages, Go modules, Ruby gems, or any codebase with consistent naming patterns.
 
 ### Publishing scaffolder as NPM package

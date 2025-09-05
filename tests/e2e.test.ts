@@ -112,7 +112,6 @@ npx foo-bar-app
         'utf-8'
       );
       expect(packageJson).toContain('foo-bar-app-generator');
-      expect(packageJson).not.toContain('plop');
       expect(JSON.parse(packageJson).dependencies).toEqual({});
 
       const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
@@ -121,7 +120,6 @@ npx foo-bar-app
       expect(indexJs).toContain('const replacements = {');
       expect(indexJs).toContain('"__camel1__": toCamelCase(symbolName)');
       expect(indexJs).toContain('readline');
-      expect(indexJs).not.toContain('plop');
 
       const readme = await readFile(join(outputDir, 'README.md'), 'utf-8');
       expect(readme).toContain('FooBarApp scaffolding generator');

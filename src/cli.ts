@@ -25,7 +25,6 @@ export const runCLI = (): void => {
     .version(`${version}-${git_commit_hash}`);
 
   program
-    .description('Convert a source directory into a Plop.js template')
     .argument('<source-dir>', 'Source directory to convert')
     .argument('<symbol-name>', 'Symbol name to replace (in PascalCase)')
     .option(

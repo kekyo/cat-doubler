@@ -26,7 +26,7 @@ This generates a scaffolder that can create new components with any name. The fo
 
 ```bash
 cd ./scaffolder
-node index.js NewShinyComponent ./new-shiny-component
+node scaffolder.js NewShinyComponent ./new-shiny-component
 ```
 
 The generated CLI automatically handles all case variations (`PascalCase`, `camelCase`, `kebab-case`, `snake_case`, `CONSTANT_CASE`) throughout your entire codebase.

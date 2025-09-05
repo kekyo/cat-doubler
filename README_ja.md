@@ -31,7 +31,7 @@ cat-doubler ./my-component MyAwesomeComponent
 
 ```bash
 cd ./scaffolder
-node index.js NewShinyComponent ./new-shiny-component
+node scaffolder.js NewShinyComponent ./new-shiny-component
 ```
 
 生成されたCLIは、コードベース全体にわたってすべてのケースバリエーション（`PascalCase`、`camelCase`、`kebab-case`、`snake_case`、`CONSTANT_CASE`）を自動的に処理します。
@@ -128,7 +128,7 @@ npx my-awesome-page-generator
 
 ```bash
 # 引数なしで実行する
-node index.js
+node scaffolder.js
 
 # 以下のプロンプトが表示されます：
 Enter the new project name (in PascalCase): MyNewProject
@@ -144,10 +144,10 @@ Project successfully generated at ./my-project
 
 ```bash
 # 位置引数で指定
-node index.js MyNewProject ./my-project
+node scaffolder.js MyNewProject ./my-project
 
 # または名前付きオプションで指定
-node index.js --symbolName MyNewProject --outputDir ./my-project
+node scaffolder.js --symbolName MyNewProject --outputDir ./my-project
 ```
 
 ### npxでの使用
@@ -209,7 +209,7 @@ cat-doublerを実行すると、スタンドアロンのCLIツールが生成さ
 
 ```
 output/
-├── index.js       # スタンドアロンCLI（依存関係なし）
+├── scaffolder.js       # スタンドアロンCLI（依存関係なし）
 ├── package.json   # 最小限のパッケージ設定
 ├── README.md      # 使用方法の説明
 └── templates/     # プレースホルダーを含むプロジェクト
@@ -231,10 +231,10 @@ output/
 
 ```bash
 # インタラクティブモード
-node index.js
+node scaffolder.js
 
 # 引数付き
-node index.js MyNewProject ./output-dir
+node scaffolder.js MyNewProject ./output-dir
 
 # 任意の場所から
 npx ./my-template MyNewProject ./output-dir

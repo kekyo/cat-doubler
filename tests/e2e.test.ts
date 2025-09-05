@@ -114,7 +114,7 @@ npx foo-bar-app
       expect(packageJson).toContain('foo-bar-app-generator');
       expect(JSON.parse(packageJson).dependencies).toEqual({});
 
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
       expect(indexJs).toContain('#!/usr/bin/env node');
       // Check for the new direct replacements generation
       expect(indexJs).toContain('const replacements = {');
@@ -276,7 +276,7 @@ const FooBarApp = 'Original';`
     it('should create a working CLI that can generate new projects', async () => {
       // Create a minimal source project
       await writeFile(
-        join(sourceDir, 'index.js'),
+        join(sourceDir, 'scaffolder.js'),
         `const FooBarApp = require('foo-bar-app');
 module.exports = { FooBarApp };`
       );
@@ -292,8 +292,8 @@ module.exports = { FooBarApp };`
         mockLogger
       );
 
-      // Verify the index.js is valid JavaScript
-      const { stderr } = await execAsync('node -c index.js', {
+      // Verify the scaffolder.js is valid JavaScript
+      const { stderr } = await execAsync('node -c scaffolder.js', {
         cwd: outputDir,
       });
       expect(stderr).toBe('');
@@ -367,7 +367,7 @@ const fooBarApp = new FooBarApp();
 
       // Run the generated CLI with command-line arguments
       const { stdout, stderr } = await execAsync(
-        'node ./index.js --symbolName MyAwesomeProject --outputDir ../generated-project',
+        'node ./scaffolder.js --symbolName MyAwesomeProject --outputDir ../generated-project',
         {
           cwd: outputDir,
           timeout: 30000, // 30 second timeout
@@ -431,15 +431,18 @@ const fooBarApp = new FooBarApp();
       );
 
       // Test help output
-      const { stdout: helpOutput } = await execAsync('node ./index.js --help', {
-        cwd: outputDir,
-      });
-      expect(helpOutput).toContain('Usage: node index.js');
+      const { stdout: helpOutput } = await execAsync(
+        'node ./scaffolder.js --help',
+        {
+          cwd: outputDir,
+        }
+      );
+      expect(helpOutput).toContain('Usage: node scaffolder.js');
       expect(helpOutput).toContain('--symbolName');
       expect(helpOutput).toContain('--outputDir');
     });
 
-    it('should embed dynamic placeholders correctly in generated index.js', async () => {
+    it('should embed dynamic placeholders correctly in generated scaffolder.js', async () => {
       // Create a project without placeholder collisions
       await writeFile(
         join(sourceDir, 'app.js'),
@@ -459,8 +462,8 @@ const fooBarApp = new FooBarApp();
         mockLogger
       );
 
-      // Check the generated index.js has the correct placeholders
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      // Check the generated scaffolder.js has the correct placeholders
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
 
       // Should use suffix 1 when no collisions
       expect(indexJs).toContain('"__camel1__": toCamelCase(symbolName)');
@@ -496,8 +499,8 @@ const fooBarApp = new FooBarApp();
         mockLogger
       );
 
-      // Check the generated index.js uses suffix 2 due to collision
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      // Check the generated scaffolder.js uses suffix 2 due to collision
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
 
       expect(indexJs).toContain('"__camel2__": toCamelCase(symbolName)');
       expect(indexJs).toContain('"__pascal2__": toPascalCase(symbolName)');
@@ -591,7 +594,7 @@ export class FooBarApp {
 
       // Generate a project using the CLI
       const { stdout, stderr } = await execAsync(
-        'node ./index.js --symbolName TestProject --outputDir ../test-output',
+        'node ./scaffolder.js --symbolName TestProject --outputDir ../test-output',
         {
           cwd: outputDir,
         }
@@ -671,8 +674,8 @@ export class FooBarApp {
         mockLogger
       );
 
-      // Check generated index.js includes text file paths with placeholders
-      const indexJs = await readFile(join(outputDir, 'index.js'), 'utf-8');
+      // Check generated scaffolder.js includes text file paths with placeholders
+      const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
       expect(indexJs).toContain('TEXT_FILE_PATHS');
 
       // Text files should be in TEXT_FILE_PATHS with placeholder paths
@@ -707,7 +710,7 @@ export class FooBarApp {
 
       // Generate a project using the CLI
       const { stdout, stderr } = await execAsync(
-        'node ./index.js --symbolName MyNewApp --outputDir ../generated-output',
+        'node ./scaffolder.js --symbolName MyNewApp --outputDir ../generated-output',
         {
           cwd: outputDir,
         }
@@ -786,7 +789,7 @@ export class FooBarApp {
             name: 'foo-bar-app',
             version: '1.0.0',
             description: 'FooBarApp application',
-            main: 'index.js',
+            main: 'scaffolder.js',
           },
           null,
           2
@@ -810,7 +813,7 @@ export const fooBarApp = new FooBarApp();`
       );
 
       await writeFile(
-        join(sourceDir, 'index.js'),
+        join(sourceDir, 'scaffolder.js'),
         `const { FooBarApp } = require('./src/FooBarApp');
 module.exports = { FooBarApp };`
       );
@@ -833,7 +836,7 @@ module.exports = { FooBarApp };`
       );
       const packageData = JSON.parse(packageJson);
       expect(packageData.bin).toBeDefined();
-      expect(packageData.bin['foo-bar-app-generator']).toBe('./index.js');
+      expect(packageData.bin['foo-bar-app-generator']).toBe('./scaffolder.js');
 
       // Run npm pack
       const { stdout: packOutput } = await execAsync('npm pack --json', {
@@ -860,7 +863,7 @@ module.exports = { FooBarApp };`
 
       // Verify essential files are in the tarball
       expect(tarContents).toContain('package/package.json');
-      expect(tarContents).toContain('package/index.js');
+      expect(tarContents).toContain('package/scaffolder.js');
       expect(tarContents).toContain('package/README.md');
       expect(tarContents).toContain('package/templates/');
 
@@ -873,7 +876,7 @@ module.exports = { FooBarApp };`
         }
       );
 
-      expect(helpOutput).toContain('Usage: node index.js');
+      expect(helpOutput).toContain('Usage: node scaffolder.js');
       expect(helpOutput).toContain('--symbolName');
       expect(helpOutput).toContain('--outputDir');
       expect(helpOutput).toContain('--help');
@@ -911,7 +914,7 @@ module.exports = { FooBarApp };`
       expect(genMainFile).toContain('testPackedProject');
 
       const genIndexFile = await readFile(
-        join(packedTestDir, 'index.js'),
+        join(packedTestDir, 'scaffolder.js'),
         'utf-8'
       );
       expect(genIndexFile).toContain('TestPackedProject');
@@ -1117,7 +1120,7 @@ logs/*.log
     it('should throw error when specified ignore file does not exist', async () => {
       // Create a simple source file
       await writeFile(
-        join(sourceDir, 'index.js'),
+        join(sourceDir, 'scaffolder.js'),
         'export const FooBarApp = "app";'
       );
 

@@ -97,7 +97,7 @@ dist/
   logger.debug('  Created .gitignore');
 
   logger.info(`  Generated CLI project structure:`);
-  logger.info(`    - index.js`);
+  logger.info(`    - index.js (entry point)`);
   logger.info(`    - package.json`);
   logger.info(`    - README.md`);
   logger.info(`    - templates/ (${templateFiles.length} files)`);

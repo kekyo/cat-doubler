@@ -22,7 +22,11 @@ export const runCLI = (): void => {
   program
     .name(name)
     .description(description)
-    .version(`${version}-${git_commit_hash}`);
+    .version(
+      `${version}-${git_commit_hash}`,
+      '-v, --version',
+      'output the version number'
+    );
 
   program
     .argument('<source-dir>', 'Source directory to convert')
@@ -40,7 +44,6 @@ export const runCLI = (): void => {
       '--text-path <file>',
       'Path to text file patterns file (default: .catdoublertext)'
     )
-    .option('-v, --verbose', 'Enable verbose logging', false)
     .option(
       '--log-level <level>',
       'Set log level (debug, info, warn, error, ignore)',
@@ -54,7 +57,6 @@ export const runCLI = (): void => {
           output: string;
           ignorePath?: string;
           textPath?: string;
-          verbose: boolean;
           logLevel: string;
         }
       ) => {
@@ -66,9 +68,7 @@ export const runCLI = (): void => {
           'error',
           'ignore',
         ];
-        const logLevel = (
-          options.verbose ? 'debug' : options.logLevel
-        ) as LogLevel;
+        const logLevel = options.logLevel as LogLevel;
         if (!validLogLevels.includes(logLevel)) {
           console.error(
             `Error: Invalid log level "${options.logLevel}". Must be one of: ${validLogLevels.join(', ')}`
@@ -105,10 +105,6 @@ export const runCLI = (): void => {
 
           logger.info(`Converting "${sourceDir}" with symbol "${symbolName}"`);
           logger.info(`Output directory: ${outputPath}`);
-
-          if (logLevel === 'debug') {
-            logger.debug('Debug logging enabled');
-          }
 
           // Perform the conversion
           await convertToTemplate(

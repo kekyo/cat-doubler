@@ -23,7 +23,7 @@ export const findSafePlaceholders = async (
   files: ScannedFile[],
   logger: Logger
 ): Promise<PlaceholderSet> => {
-  logger.debug('Phase 2: Detecting safe placeholders...');
+  logger.info('Phase 2: Detecting safe placeholders...');
 
   // Collect all existing strings from file paths and contents
   const existingStrings = new Set<string>();
@@ -92,7 +92,7 @@ export const findSafePlaceholders = async (
     );
 
     if (!hasCollision) {
-      logger.debug(`  Found safe placeholders with suffix: ${counter}`);
+      logger.info(`  Found safe placeholders with suffix: ${counter}`);
       logger.debug(`    camel: ${candidates.camel}`);
       logger.debug(`    pascal: ${candidates.pascal}`);
       logger.debug(`    kebab: ${candidates.kebab}`);

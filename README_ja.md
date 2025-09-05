@@ -71,8 +71,9 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `-o, --output <path>`: 生成されたテンプレートの出力ディレクトリ（デフォルト：`./scaffolder`）
 - `--ignore-path <file>`: 除外ファイルのパス（デフォルト：`.catdoublerignore`）
 - `--text-path <file>`: テキストファイルパターンのパス（デフォルト：`.catdoublertext`）
-- `-v, --verbose`: 詳細ログを有効化
-- `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）
+- `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）（デフォルト：`info`）
+- `-v, --version`: バージョン番号を表示
+- `-h, --help`: コマンドのヘルプを表示
 
 ### 実行例
 

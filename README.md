@@ -70,8 +70,9 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `-o, --output <path>`: Output directory for generated template (default: `./scaffolder`)
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
 - `--text-path <file>`: Path to text file patterns (default: `.catdoublertext`)
-- `-v, --verbose`: Enable verbose logging
-- `--log-level <level>`: Set log level (debug, info, warn, error, ignore)
+- `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
+- `-v, --version`: Display version number
+- `-h, --help`: Display help for command
 
 ### Examples
 

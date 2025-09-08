@@ -13,6 +13,20 @@ export interface ReplacementResult {
   replacementCount: number;
 }
 
+// Check if the input is a lowercase-only single word (no word boundaries detected)
+const isLowercaseOnlyInput = (variants: CaseVariants): boolean => {
+  const original = variants.original;
+
+  // Check if all case variants are the same or very similar
+  // This indicates that change-case couldn't detect word boundaries
+  return (
+    original === original.toLowerCase() && // Original is lowercase
+    variants.camelCase === original && // camelCase is same as original
+    variants.kebabCase === original && // kebabCase is same as original
+    variants.snakeCase === original // snakeCase is same as original
+  );
+};
+
 // Replace symbol occurrences in content with placeholders
 export const replaceSymbolInContent = (
   content: string,
@@ -107,6 +121,39 @@ export const replaceSymbolInContent = (
       logger.debug(
         `    Replaced ${originalMatches.length} occurrences of original "${variants.original}" with ${placeholder}`
       );
+    }
+  }
+
+  // Handle special case for lowercase-only input (e.g., "webapi")
+  // Generate additional variants to catch different case patterns
+  if (isLowercaseOnlyInput(variants)) {
+    const lowercaseOriginal = variants.original;
+
+    // Additional variants to check and replace
+    const additionalVariants: Array<[string, keyof PlaceholderSet]> = [
+      [lowercaseOriginal, 'camel'], // "webapi" -> camelCase placeholder
+      [
+        lowercaseOriginal.charAt(0).toUpperCase() + lowercaseOriginal.slice(1),
+        'pascal',
+      ], // "Webapi" -> PascalCase placeholder
+      [lowercaseOriginal.toUpperCase(), 'constant'], // "WEBAPI" -> CONSTANT_CASE placeholder
+    ];
+
+    for (const [variant, placeholderKey] of additionalVariants) {
+      if (variant.length < 2) continue;
+
+      const placeholder = placeholders[placeholderKey];
+      const pattern = new RegExp(escapeRegExp(variant), 'g');
+      const matches = result.match(pattern);
+
+      if (matches && matches.length > 0) {
+        result = result.replace(pattern, placeholder);
+        totalReplacements += matches.length;
+
+        logger.debug(
+          `    Replaced ${matches.length} occurrences of lowercase-variant "${variant}" with ${placeholder}`
+        );
+      }
     }
   }
 
@@ -211,6 +258,42 @@ export const replaceSymbolInPath = (
       }
 
       return transformed;
+    }
+
+    // Handle special case for lowercase-only input in paths
+    if (isLowercaseOnlyInput(variants)) {
+      const lowercaseOriginal = variants.original;
+
+      // Additional variants to check in paths
+      const additionalVariants: Array<[string, keyof PlaceholderSet]> = [
+        [lowercaseOriginal, 'camel'], // "webapi" -> camelCase placeholder
+        [
+          lowercaseOriginal.charAt(0).toUpperCase() +
+            lowercaseOriginal.slice(1),
+          'pascal',
+        ], // "Webapi" -> PascalCase placeholder
+        [lowercaseOriginal.toUpperCase(), 'constant'], // "WEBAPI" -> CONSTANT_CASE placeholder
+      ];
+
+      for (const [variant, placeholderKey] of additionalVariants) {
+        if (variant.length < 2) continue;
+
+        if (segment.includes(variant)) {
+          const placeholder = placeholders[placeholderKey];
+          const transformed = segment.replace(
+            new RegExp(escapeRegExp(variant), 'g'),
+            placeholder
+          );
+
+          if (transformed !== segment) {
+            logger.debug(
+              `    Path segment "${segment}" -> "${transformed}" (lowercase-variant)`
+            );
+          }
+
+          return transformed;
+        }
+      }
     }
 
     return segment;

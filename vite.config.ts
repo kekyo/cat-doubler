@@ -48,6 +48,8 @@ export default defineConfig({
         'change-case',
         'glob',
         'handlebars',
+        'chardet',
+        'isbinaryfile',
       ],
     },
     target: 'node18',

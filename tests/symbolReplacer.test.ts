@@ -246,6 +246,69 @@ const dotted = 'foo.bar.app';       // dot.case`;
 
       expect(result.replacementCount).toBe(14); // Some are replaced as part of others due to ordering
     });
+
+    it('should handle lowercase-only input by generating additional case variants', () => {
+      const content = `cd dotnet/webapi
+dotnet run
+echo "Started webapi server"
+const WEBAPI = 'configuration';
+const Webapi = 'middleware';`;
+
+      const variants = generateCaseVariants('webapi'); // Lowercase-only input
+      const result = replaceSymbolInContent(
+        content,
+        variants,
+        placeholders,
+        mockLogger
+      );
+
+      // Should replace webapi -> camelCase placeholder
+      expect(result.content).toContain('cd dotnet/__camel1__');
+      expect(result.content).toContain('Started __camel1__ server');
+
+      // Should replace WEBAPI -> CONSTANT_CASE placeholder
+      expect(result.content).toContain('const __constant1__ =');
+
+      // Should replace Webapi -> PascalCase placeholder
+      expect(result.content).toContain('const __pascal1__ =');
+
+      // All original variants should be replaced
+      expect(result.content).not.toContain('webapi');
+      expect(result.content).not.toContain('WEBAPI');
+      expect(result.content).not.toContain('Webapi');
+
+      expect(result.replacementCount).toBe(4);
+    });
+
+    it('should handle another lowercase-only input example', () => {
+      const content = `import { api } from './api';
+const API_CONFIG = 'config';
+export class Api extends BaseApi {
+  start() {
+    console.log('api starting');
+  }
+}`;
+
+      const variants = generateCaseVariants('api'); // Lowercase-only input
+      const result = replaceSymbolInContent(
+        content,
+        variants,
+        placeholders,
+        mockLogger
+      );
+
+      // Should replace api -> camelCase placeholder
+      expect(result.content).toContain('import { __camel1__ }');
+      expect(result.content).toContain("console.log('__camel1__ starting');");
+
+      // Should replace API -> CONSTANT_CASE placeholder (part of API_CONFIG)
+      expect(result.content).toContain('const __constant1___CONFIG');
+
+      // Should replace Api -> PascalCase placeholder
+      expect(result.content).toContain('export class __pascal1__ extends');
+
+      expect(result.replacementCount).toBe(6);
+    });
   });
 
   describe('replaceSymbolInPath', () => {
@@ -366,6 +429,54 @@ const dotted = 'foo.bar.app';       // dot.case`;
 
       expect(result).toBe(
         'src/__pascal1__/__kebab1__/__snake1__/__dot1__/__lower1__/__upper1__.ts'
+      );
+    });
+
+    it('should handle lowercase-only input in paths by generating additional case variants', () => {
+      const path = 'dotnet/webapi/Controllers/WebapiController.cs';
+      const variants = generateCaseVariants('webapi'); // Lowercase-only input
+      const result = replaceSymbolInPath(
+        path,
+        variants,
+        placeholders,
+        mockLogger
+      );
+
+      // Should replace webapi -> camelCase placeholder
+      // Should replace Webapi -> PascalCase placeholder
+      expect(result).toBe(
+        'dotnet/__camel1__/Controllers/__pascal1__Controller.cs'
+      );
+    });
+
+    it('should handle another lowercase-only path example', () => {
+      const path = 'src/api/API_CONFIG/ApiService.ts';
+      const variants = generateCaseVariants('api'); // Lowercase-only input
+      const result = replaceSymbolInPath(
+        path,
+        variants,
+        placeholders,
+        mockLogger
+      );
+
+      // Should replace api -> camelCase, API -> CONSTANT_CASE, Api -> PascalCase
+      expect(result).toBe(
+        'src/__camel1__/__constant1___CONFIG/__pascal1__Service.ts'
+      );
+    });
+
+    it('should handle mixed lowercase-only variants in complex paths', () => {
+      const path = 'projects/webapi/WEBAPI/Webapi/webapi.config.json';
+      const variants = generateCaseVariants('webapi'); // Lowercase-only input
+      const result = replaceSymbolInPath(
+        path,
+        variants,
+        placeholders,
+        mockLogger
+      );
+
+      expect(result).toBe(
+        'projects/__camel1__/__constant1__/__pascal1__/__camel1__.config.json'
       );
     });
   });

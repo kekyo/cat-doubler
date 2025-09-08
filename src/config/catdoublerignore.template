@@ -28,12 +28,16 @@ Release/
 # IDE and editor files
 .vscode/
 .idea/
+.claude/
+.cursor/
 *.swp
 *.swo
 *~
 .DS_Store
 Thumbs.db
 *.bak
+.user
+.users
 
 # Environment files
 .env

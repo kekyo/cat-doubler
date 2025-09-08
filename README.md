@@ -120,6 +120,9 @@ Note: Using extremely simple names for symbol may cause unintended conversions.
 For example, specifying `App` as a symbol name will cause `Application` to be converted as well, in addition to matching instances of `App` in filenames and source code.
 As a result, if an end-user names something `FooBar`, it might be replaced with something like `FooBarlication`, preventing correct code generation.
 
+Additionally, using all-lowercase symbol names like `webapi` prevents automatic conversion because word boundaries cannot be recognized,
+making conversions like `WebApi`, `webApi`, or `web-api` impossible.
+
 Therefore, when creating a template project, it is advisable to choose a name that is sufficiently complex and unlikely to match partial strings.
 
 ### Publishing scaffolder as NPM package

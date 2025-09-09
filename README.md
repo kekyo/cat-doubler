@@ -212,6 +212,15 @@ If the file already exists, it will be skipped.
 
 This file like `.gitignore`, allows you to write glob patterns to exclude specified files and directories from the template project. If the generated scaffolder does not contain the necessary files or contains extra files, you can adjust them with this file.
 
+#### Hierarchical ignore files
+
+cat-doubler supports hierarchical ignore patterns similar to Git. You can place `.catdoublerignore` or `.gitignore` files in any subdirectory of your project:
+
+- `.catdoublerignore` takes precedence over `.gitignore` in the same directory
+- If `.catdoublerignore` doesn't exist, `.gitignore` will be used as a fallback
+- Rules from parent directories are merged with subdirectory rules
+- Subdirectory rules can override parent rules
+
 Here is an example:
 
 ```

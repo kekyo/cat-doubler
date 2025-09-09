@@ -27,15 +27,33 @@ describe('Ignore File Parser', () => {
 
       // Check default patterns
       expect(
-        manager.isIgnored(join(testDir, 'node_modules', 'something.js'))
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'node_modules', 'something.js'))
+        )
       ).toBe(true);
-      expect(manager.isIgnored(join(testDir, '.git', 'HEAD'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'dist', 'index.js'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'build', 'output.js'))).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, '.git', 'HEAD')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'dist', 'index.js'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'build', 'output.js'))
+        )
+      ).toBe(true);
 
       // Should not ignore regular files
-      expect(manager.isIgnored(join(testDir, 'src', 'index.js'))).toBe(false);
-      expect(manager.isIgnored(join(testDir, 'README.md'))).toBe(false);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'index.js'))
+        )
+      ).toBe(false);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'README.md')))
+      ).toBe(false);
     });
 
     it('should load patterns from .catdoublerignore', async () => {
@@ -53,20 +71,34 @@ src/**/*.test.js
       const manager = await createIgnoreManager(undefined, testDir, mockLogger);
 
       // Test custom patterns
-      expect(manager.isIgnored(join(testDir, 'debug.log'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'temp', 'file.txt'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'important.log'))).toBe(false); // Negated
       expect(
-        manager.isIgnored(join(testDir, 'src', 'utils', 'helper.test.js'))
+        await Promise.resolve(manager.isIgnored(join(testDir, 'debug.log')))
       ).toBe(true);
       expect(
-        manager.isIgnored(join(testDir, 'src', 'utils', 'helper.js'))
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'temp', 'file.txt'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'important.log')))
+      ).toBe(false); // Negated
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'utils', 'helper.test.js'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'utils', 'helper.js'))
+        )
       ).toBe(false);
 
       // Default patterns are NOT inherited when custom ignore file exists
       // (This is standard .gitignore behavior)
       expect(
-        manager.isIgnored(join(testDir, 'node_modules', 'package.json'))
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'node_modules', 'package.json'))
+        )
       ).toBe(false);
     });
 
@@ -86,9 +118,17 @@ cache/
         mockLogger
       );
 
-      expect(manager.isIgnored(join(testDir, 'file.tmp'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'cache', 'data.json'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'file.txt'))).toBe(false);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'file.tmp')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'cache', 'data.json'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'file.txt')))
+      ).toBe(false);
     });
 
     it('should throw error when specified ignore file does not exist', async () => {
@@ -127,30 +167,54 @@ private/
       const manager = await createIgnoreManager(undefined, testDir, mockLogger);
 
       // Root level .txt files
-      expect(manager.isIgnored(join(testDir, 'file.txt'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'subdirs', 'file.txt'))).toBe(
-        false
-      );
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'file.txt')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'subdirs', 'file.txt'))
+        )
+      ).toBe(false);
 
       // Underscore files
-      expect(manager.isIgnored(join(testDir, '_private.js'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'src', '_config.js'))).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, '_private.js')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', '_config.js'))
+        )
+      ).toBe(true);
 
       // Private directory
-      expect(manager.isIgnored(join(testDir, 'private', 'secret.js'))).toBe(
-        true
-      );
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'private', 'secret.js'))
+        )
+      ).toBe(true);
 
       // Backup and swap files
-      expect(manager.isIgnored(join(testDir, 'src', 'file.bak'))).toBe(true);
       expect(
-        manager.isIgnored(join(testDir, 'deep', 'nested', 'file.swp'))
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'file.bak'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'deep', 'nested', 'file.swp'))
+        )
       ).toBe(true);
 
       // Bracket patterns
-      expect(manager.isIgnored(join(testDir, 'Temp'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'temp'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'TempFile.js'))).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'Temp')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'temp')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'TempFile.js')))
+      ).toBe(true);
     });
 
     it('should handle comments and empty lines correctly', async () => {
@@ -169,8 +233,12 @@ private/
 
       const manager = await createIgnoreManager(undefined, testDir, mockLogger);
 
-      expect(manager.isIgnored(join(testDir, 'debug.log'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'file.tmp'))).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'debug.log')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'file.tmp')))
+      ).toBe(true);
       // Pattern count is no longer tracked (always returns 0)
     });
 
@@ -186,20 +254,32 @@ private/
 
       // Directory patterns
       expect(
-        manager.isIgnored(join(testDir, 'src', 'internal', 'file.js'))
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'internal', 'file.js'))
+        )
       ).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'src', 'public', 'file.js'))).toBe(
-        false
-      );
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'public', 'file.js'))
+        )
+      ).toBe(false);
 
       // File patterns with negation
-      expect(manager.isIgnored(join(testDir, 'private.secret'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'src', 'private.secret'))).toBe(
-        true
-      );
-      expect(manager.isIgnored(join(testDir, 'public', 'api.secret'))).toBe(
-        false
-      );
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'private.secret'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'private.secret'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'public', 'api.secret'))
+        )
+      ).toBe(false);
     });
   });
 
@@ -273,15 +353,31 @@ src/**/*.test.js
       const manager = await createIgnoreManager(undefined, testDir, mockLogger);
 
       // Files that should be ignored
-      expect(manager.isIgnored(join(testDir, 'logs', 'debug.log'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'test', 'index.test.js'))).toBe(
-        true
-      );
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'logs', 'debug.log'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'test', 'index.test.js'))
+        )
+      ).toBe(true);
 
       // Files that should not be ignored
-      expect(manager.isIgnored(join(testDir, 'src', 'index.js'))).toBe(false);
-      expect(manager.isIgnored(join(testDir, 'src', 'helper.js'))).toBe(false);
-      expect(manager.isIgnored(join(testDir, 'README.md'))).toBe(false);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'index.js'))
+        )
+      ).toBe(false);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'src', 'helper.js'))
+        )
+      ).toBe(false);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'README.md')))
+      ).toBe(false);
     });
   });
 });

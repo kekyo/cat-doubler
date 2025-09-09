@@ -53,7 +53,11 @@ export const scanDirectory = async (
     const absolutePath = join(sourcePath, file);
 
     // Check if file should be ignored
-    if (ignoreManager.isIgnored(absolutePath)) {
+    // Handle async isIgnored for hierarchical manager
+    const isIgnored = await Promise.resolve(
+      ignoreManager.isIgnored(absolutePath)
+    );
+    if (isIgnored) {
       logger.debug(`  [ignored] ${file}`);
       continue;
     }

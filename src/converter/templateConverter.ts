@@ -3,7 +3,7 @@
 // Under MIT.
 // https://github.com/kekyo/cat-doubler
 
-import { mkdir, readFile, writeFile, cp, access } from 'fs/promises';
+import { mkdir, readFile, writeFile, cp, access, rm } from 'fs/promises';
 import { join, dirname } from 'path';
 import { scanDirectory } from '../scanner/fileScanner';
 import { CaseVariants } from '../utils/caseUtils';
@@ -18,8 +18,24 @@ export const convertToTemplate = async (
   outputPath: string,
   ignorePath: string | undefined,
   packageJsonPath: string | undefined,
-  logger: Logger
+  logger: Logger,
+  clean: boolean = true
 ): Promise<void> => {
+  // Clean output directory if requested
+  if (clean) {
+    try {
+      await access(outputPath);
+      logger.info(`Cleaning output directory: ${outputPath}`);
+      await rm(outputPath, { recursive: true, force: true });
+      logger.debug('  Output directory cleaned successfully');
+    } catch {
+      // Directory doesn't exist, no need to clean
+      logger.debug('  Output directory does not exist, skipping cleanup');
+    }
+  } else {
+    logger.debug('  Skipping output directory cleanup (--no-clean option)');
+  }
+
   logger.info('Phase 1: Scanning source directory...');
   const files = await scanDirectory(sourcePath, ignorePath, logger);
 

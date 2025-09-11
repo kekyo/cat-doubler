@@ -92,6 +92,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
 - `--package-json <file>`: Path to package.json override file (default: `.catdoubler.package.json`)
 - `--ignore-init`: Initialize .catdoublerignore configuration file
+- `--no-clean`: Do not clean the output directory before generating (by default, existing output directory is removed)
 - `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
 - `-v, --version`: Display version number
 - `-h, --help`: Display help for command

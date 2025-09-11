@@ -52,6 +52,7 @@ export const runCLI = (): void => {
       'info'
     )
     .option('--ignore-init', 'Initialize .catdoublerignore configuration file')
+    .option('--no-clean', 'Do not clean the output directory before generating')
     .action(
       async (
         sourceDir: string,
@@ -62,6 +63,7 @@ export const runCLI = (): void => {
           packageJson?: string;
           logLevel: string;
           ignoreInit?: boolean;
+          clean?: boolean;
         }
       ) => {
         // Validate log level
@@ -141,7 +143,8 @@ export const runCLI = (): void => {
             outputPath,
             options.ignorePath,
             options.packageJson,
-            logger
+            logger,
+            options.clean !== false // Default to true unless --no-clean is specified
           );
 
           logger.info('Template generation completed successfully');

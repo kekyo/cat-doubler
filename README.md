@@ -30,11 +30,23 @@ cat-doubler ./my-component MyAwesomeComponent
 This generates a scaffolder that can create new components with any name. The following creates a new project named `NewShinyComponent`:
 
 ```bash
+# Run scaffolder
 cd ./scaffolder
-node scaffolder.js NewShinyComponent ./new-shiny-component
+npm run build
+
+# Enter new project details
+Enter the new project name (in PascalCase): NewShinyComponent
+Output directory [./output/my-new-project]: ./new-shiny-component
 ```
 
 The generated CLI automatically handles all case variations (`PascalCase`, `camelCase`, `kebab-case`, `snake_case`, `CONSTANT_CASE`) throughout your entire codebase.
+
+If you publish the scaffolder as a package, you can run it with just the npx command:
+
+```bash
+# Run the scaffolder with the npx command
+npx my-awesome-component-generator
+```
 
 ## Key Features
 
@@ -97,7 +109,7 @@ When no output directory is specified, the template is generated in `./scaffolde
 Specify output directory with `--output`:
 
 ```bash
-cat-doubler . MyAwesomePage --output ./awesome-page-template
+cat-doubler --output ./awesome-page-template . MyAwesomePage
 ```
 
 This will generate a scaffolder project like the following:
@@ -155,6 +167,8 @@ You can also specify a custom override file using the `--package-json` option:
 cat-doubler --package-json ./custom-package.json . MyAwesomePage
 ```
 
+Using this feature, you can automatically reflect customized attribute values in the scaffolder during the CI/CD process.
+
 ### Publishing scaffolder as NPM package
 
 The generated scaffolder is immediately ready to be published as an NPM package:
@@ -168,10 +182,11 @@ cd ./scaffolder
 # Note: package.json is already configured with:
 # - name: "my-awesome-page-generator"
 # - bin field for npx execution
-# - version: "1.0.0"
+# - version: "0.0.1"
 
 # 3. (Optional) Customize package.json if needed
 # Update version, author, repository, etc.
+# Recommend customizing using .catdoubler.package.json.
 
 # 4. Publish to npm registry
 npm publish --access public
@@ -191,8 +206,8 @@ The generated scaffolder provides an interactive interface for creating new proj
 ### Interactive mode
 
 ```bash
-# Simply run without arguments
-node scaffolder.js
+# Run scaffolder in npx command
+npx my-awesome-page-generator
 
 # You'll be prompted for:
 Enter the new project name (in PascalCase): MyNewProject

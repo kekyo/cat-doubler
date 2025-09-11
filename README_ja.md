@@ -31,11 +31,23 @@ cat-doubler ./my-component MyAwesomeComponent
 以下は `NewShinyComponent` と言う名前のプロジェクトを生成します：
 
 ```bash
+# スキャフォールダーを起動
 cd ./scaffolder
-node scaffolder.js NewShinyComponent ./new-shiny-component
+npm run build
+
+# 新しいプロジェクトの情報を入力
+Enter the new project name (in PascalCase): NewShinyComponent
+Output directory [./output/my-new-project]: ./new-shiny-component
 ```
 
 生成されたCLIは、コードベース全体にわたってすべてのケースバリエーション（`PascalCase`、`camelCase`、`kebab-case`、`snake_case`、`CONSTANT_CASE`）を自動的に処理します。
+
+スキャフォールダーをパッケージで公開すれば、npxコマンドだけで実行できます:
+
+```bash
+# スキャフォールダーをnpxコマンドで実行
+npx my-awesome-component-generator
+```
 
 ## 主な機能
 
@@ -98,7 +110,7 @@ cat-doubler . MyAwsomePage
 出力ディレクトリは、`--output`で指定します:
 
 ```bash
-cat-doubler . MyAwsomePage --output ./awsome-page-template
+cat-doubler --output ./awsome-page-template . MyAwsomePage
 ```
 
 これにより、以下のようなスキャフォールダープロジェクトが生成されます:
@@ -156,6 +168,8 @@ scaffolder/
 cat-doubler --package-json ./custom-package.json . MyAwsomePage
 ```
 
+この機能を使用すれば、CI/CDプロセス中に、カスタマイズされた属性情報を自動でスキャフォールダーに反映できます。
+
 ### スキャフォルダーをNPMパッケージとして公開
 
 生成されたスキャフォルダーは、すぐにNPMパッケージとして公開できます:
@@ -169,10 +183,11 @@ cd ./scaffolder
 # 注意：package.jsonは以下の内容で既に設定済み：
 # - name: "my-awesome-page-generator"
 # - npx実行用のbinフィールド
-# - version: "1.0.0"
+# - version: "0.0.1"
 
 # 3.（オプション）必要に応じてpackage.jsonをカスタマイズ
 # version、author、repositoryなどを更新
+# .catdoubler.package.jsonを使用してカスタマイズすることを推奨
 
 # 4. npmレジストリに公開
 npm publish --access public
@@ -192,8 +207,8 @@ npx my-awesome-page-generator
 ### インタラクティブモード
 
 ```bash
-# 引数なしで実行する
-node scaffolder.js
+# npxでスキャフォールダーを起動
+npx my-awesome-page-generator
 
 # 以下のプロンプトが表示されます：
 Enter the new project name (in PascalCase): MyNewProject

@@ -111,7 +111,7 @@ npx foo-bar-app
         join(outputDir, 'package.json'),
         'utf-8'
       );
-      expect(packageJson).toContain('foo-bar-app-generator');
+      expect(packageJson).toContain('foo-bar-app-scaffolder');
       expect(JSON.parse(packageJson).engines).toEqual({
         node: '>=14.0.0',
       });
@@ -838,7 +838,7 @@ module.exports = { FooBarApp };`
       );
       const packageData = JSON.parse(packageJson);
       expect(packageData.bin).toBeDefined();
-      expect(packageData.bin['foo-bar-app-generator']).toBe('./scaffolder.js');
+      expect(packageData.bin['foo-bar-app-scaffolder']).toBe('./scaffolder.js');
 
       // Run npm pack
       const { stdout: packOutput } = await execAsync('npm pack --json', {
@@ -848,7 +848,7 @@ module.exports = { FooBarApp };`
       // Parse npm pack JSON output to get the filename
       const packInfo = JSON.parse(packOutput);
       const tarballName = packInfo[0].filename;
-      expect(tarballName).toBe('foo-bar-app-generator-0.0.1.tgz');
+      expect(tarballName).toBe('foo-bar-app-scaffolder-0.0.1.tgz');
 
       const tarballPath = join(outputDir, tarballName);
 
@@ -1250,9 +1250,9 @@ logs/*.log
       );
 
       // Verify merge happened correctly
-      expect(generatedPackageJson.name).toBe('foo-bar-app-generator');
+      expect(generatedPackageJson.name).toBe('foo-bar-app-scaffolder');
       expect(generatedPackageJson.version).toBe('2.0.0'); // Overridden
-      expect(generatedPackageJson.scripts.build).toBe('node scaffolder.js'); // From template
+      expect(generatedPackageJson.scripts.start).toBe('node scaffolder.js'); // From template
       expect(generatedPackageJson.scripts.test).toBe('vitest'); // From override
       expect(generatedPackageJson.scripts.lint).toBe('eslint .'); // From override
       expect(generatedPackageJson.dependencies?.axios).toBe('^1.0.0'); // From override
@@ -1293,9 +1293,9 @@ logs/*.log
       );
 
       // Verify default template is used
-      expect(generatedPackageJson.name).toBe('foo-bar-app-generator');
+      expect(generatedPackageJson.name).toBe('foo-bar-app-scaffolder');
       expect(generatedPackageJson.version).toBe('0.0.1'); // Default from template
-      expect(generatedPackageJson.scripts.build).toBe('node scaffolder.js');
+      expect(generatedPackageJson.scripts.start).toBe('node scaffolder.js');
       expect(generatedPackageJson.dependencies).toStrictEqual({}); // No override
     });
 

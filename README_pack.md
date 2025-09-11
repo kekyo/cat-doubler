@@ -29,7 +29,7 @@ This generates a scaffolder that can create new components with any name. The fo
 ```bash
 # Run scaffolder
 cd ./scaffolder
-npm run build
+npm run start
 
 Welcome to MyAwesomeComponent scaffolder [0.0.1]
 

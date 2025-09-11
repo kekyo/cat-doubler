@@ -33,7 +33,7 @@ cat-doubler ./my-component MyAwesomeComponent
 ```bash
 # スキャフォールダーを起動
 cd ./scaffolder
-npm run build
+npm run start
 
 Welcome to MyAwesomeComponent scaffolder [0.0.1]
 
@@ -209,7 +209,7 @@ npx my-awesome-page-generator
 ### インタラクティブモード
 
 ```bash
-# npxでスキャフォールダーを起動
+# npxでデプロイされたスキャフォールダーを起動
 npx my-awesome-page-generator
 
 Welcome to MyAwesomePage scaffolder [0.0.1]
@@ -222,28 +222,20 @@ Output directory [./output/my-new-project]: ./my-project
 Project successfully generated at ./my-project
 ```
 
-### コマンドライン引数（代替方法）
-
-引数を直接指定することもできます：
+### 詳細起動方法
 
 ```bash
-# 位置引数で指定
+# npmで起動(インタラクティブモード)
+npm run start
+
+# スキャフォールダースクリプトを指定して起動(インタラクティブモード)
+node scaffolder.js
+
+# 引数を指定して起動
 node scaffolder.js MyNewProject ./my-project
 
 # または名前付きオプションで指定
 node scaffolder.js --symbolName MyNewProject --outputDir ./my-project
-```
-
-### npxでの使用
-
-npmに公開後、ユーザーは直接実行できます：
-
-```bash
-# インタラクティブモード
-npx my-awesome-page-generator
-
-# 引数付き
-npx my-awesome-page-generator MyNewProject ./my-project
 ```
 
 ---

@@ -23,7 +23,7 @@ Release/
 
 # cat-doubler config files
 .catdoublerignore
-.catdoublertext
+.catdoubler.package.json
 
 # IDE and editor files
 .vscode/

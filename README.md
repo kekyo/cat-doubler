@@ -32,7 +32,7 @@ This generates a scaffolder that can create new components with any name. The fo
 ```bash
 # Run scaffolder
 cd ./scaffolder
-npm run build
+npm run start
 
 Welcome to MyAwesomeComponent scaffolder [0.0.1]
 
@@ -208,7 +208,7 @@ The generated scaffolder provides an interactive interface for creating new proj
 ### Interactive mode
 
 ```bash
-# Run scaffolder in npx command
+# Run deployed scaffolder in npx command
 npx my-awesome-page-generator
 
 Welcome to MyAwesomePage scaffolder [0.0.1]
@@ -221,28 +221,20 @@ Output directory [./output/my-new-project]: ./my-project
 Project successfully generated at ./my-project
 ```
 
-### Command-line arguments (alternative)
-
-You can also provide arguments directly:
+### Detailed startup methods
 
 ```bash
-# With positional arguments
+# Start with npm (Interactive mode)
+npm run start
+
+# Start by specifying the scaffolder script (Interactive mode)
+node scaffolder.js
+
+# Start by specifying arguments
 node scaffolder.js MyNewProject ./my-project
 
-# Or with named options
+# Or specify with named options
 node scaffolder.js --symbolName MyNewProject --outputDir ./my-project
-```
-
-### Using with npx
-
-Once published to npm, users can run it directly:
-
-```bash
-# Interactive mode
-npx my-awesome-page-generator
-
-# With arguments
-npx my-awesome-page-generator MyNewProject ./my-project
 ```
 
 ---

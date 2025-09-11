@@ -102,6 +102,7 @@ npx foo-bar-app
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -187,6 +188,7 @@ test('FooBarApp should work', () => {
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -222,6 +224,7 @@ test('FooBarApp should work', () => {
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -255,6 +258,7 @@ const FooBarApp = 'Original';`
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -285,6 +289,7 @@ module.exports = { FooBarApp };`
         sourceDir,
         caseVariants,
         outputDir,
+        undefined,
         undefined,
         mockLogger
       );
@@ -358,6 +363,7 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -422,6 +428,7 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -452,6 +459,7 @@ const fooBarApp = new FooBarApp();
         sourceDir,
         caseVariants,
         outputDir,
+        undefined,
         undefined,
         mockLogger
       );
@@ -488,6 +496,7 @@ const fooBarApp = new FooBarApp();
         sourceDir,
         caseVariants,
         outputDir,
+        undefined,
         undefined,
         mockLogger
       );
@@ -541,6 +550,7 @@ const fooBarApp = new FooBarApp();
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -579,6 +589,7 @@ export class FooBarApp {
         sourceDir,
         caseVariants,
         outputDir,
+        undefined,
         undefined,
         mockLogger
       );
@@ -660,6 +671,7 @@ export class FooBarApp {
         sourceDir,
         caseVariants,
         outputDir,
+        undefined,
         undefined,
         mockLogger
       );
@@ -814,6 +826,7 @@ module.exports = { FooBarApp };`
         sourceDir,
         caseVariants,
         outputDir,
+        undefined,
         undefined,
         mockLogger
       );
@@ -974,6 +987,7 @@ backup/
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -1037,6 +1051,7 @@ settings.json
         caseVariants,
         outputDir,
         customIgnorePath,
+        undefined,
         mockLogger
       );
 
@@ -1088,6 +1103,7 @@ logs/*.log
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -1120,6 +1136,7 @@ logs/*.log
           caseVariants,
           outputDir,
           nonExistentPath,
+          undefined,
           mockLogger
         )
       ).rejects.toThrow('Specified ignore file not found');
@@ -1155,6 +1172,7 @@ logs/*.log
         caseVariants,
         outputDir,
         undefined,
+        undefined,
         mockLogger
       );
 
@@ -1171,6 +1189,186 @@ logs/*.log
       ).rejects.toThrow();
       await expect(
         access(join(outputDir, 'templates', 'dist'))
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('Package.json Override', () => {
+    it('should merge .catdoubler.package.json when it exists', async () => {
+      // Create a sample project
+      await writeFile(
+        join(sourceDir, 'package.json'),
+        JSON.stringify(
+          {
+            name: 'foo-bar-app',
+            version: '1.0.0',
+            scripts: {
+              start: 'node index.js',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await writeFile(join(sourceDir, 'index.js'), `console.log('FooBarApp');`);
+
+      // Create .catdoubler.package.json override
+      await writeFile(
+        join(sourceDir, '.catdoubler.package.json'),
+        JSON.stringify(
+          {
+            version: '2.0.0',
+            scripts: {
+              test: 'vitest',
+              lint: 'eslint .',
+            },
+            dependencies: {
+              axios: '^1.0.0',
+            },
+            keywords: ['custom', 'override'],
+          },
+          null,
+          2
+        )
+      );
+
+      // Convert to template
+      const caseVariants = generateCaseVariants('FooBarApp');
+      await convertToTemplate(
+        sourceDir,
+        caseVariants,
+        outputDir,
+        undefined,
+        undefined,
+        mockLogger
+      );
+
+      // Read generated package.json
+      const generatedPackageJson = JSON.parse(
+        await readFile(join(outputDir, 'package.json'), 'utf-8')
+      );
+
+      // Verify merge happened correctly
+      expect(generatedPackageJson.name).toBe('foo-bar-app-generator');
+      expect(generatedPackageJson.version).toBe('2.0.0'); // Overridden
+      expect(generatedPackageJson.scripts.build).toBe('node scaffolder.js'); // From template
+      expect(generatedPackageJson.scripts.test).toBe('vitest'); // From override
+      expect(generatedPackageJson.scripts.lint).toBe('eslint .'); // From override
+      expect(generatedPackageJson.dependencies?.axios).toBe('^1.0.0'); // From override
+      expect(generatedPackageJson.keywords).toContain('custom');
+      expect(generatedPackageJson.keywords).toContain('override');
+    });
+
+    it('should work without .catdoubler.package.json', async () => {
+      // Create a sample project without override
+      await writeFile(
+        join(sourceDir, 'package.json'),
+        JSON.stringify(
+          {
+            name: 'foo-bar-app',
+            version: '1.0.0',
+          },
+          null,
+          2
+        )
+      );
+
+      await writeFile(join(sourceDir, 'index.js'), `console.log('FooBarApp');`);
+
+      // Convert to template
+      const caseVariants = generateCaseVariants('FooBarApp');
+      await convertToTemplate(
+        sourceDir,
+        caseVariants,
+        outputDir,
+        undefined,
+        undefined,
+        mockLogger
+      );
+
+      // Read generated package.json
+      const generatedPackageJson = JSON.parse(
+        await readFile(join(outputDir, 'package.json'), 'utf-8')
+      );
+
+      // Verify default template is used
+      expect(generatedPackageJson.name).toBe('foo-bar-app-generator');
+      expect(generatedPackageJson.version).toBe('0.0.1'); // Default from template
+      expect(generatedPackageJson.scripts.build).toBe('node scaffolder.js');
+      expect(generatedPackageJson.dependencies).toStrictEqual({}); // No override
+    });
+
+    it('should use custom package.json file with --package-json option', async () => {
+      // Create a sample project
+      await writeFile(
+        join(sourceDir, 'package.json'),
+        JSON.stringify(
+          {
+            name: 'foo-bar-app',
+            version: '1.0.0',
+          },
+          null,
+          2
+        )
+      );
+
+      await writeFile(join(sourceDir, 'index.js'), `console.log('FooBarApp');`);
+
+      // Create custom package.json override in different location
+      const customPath = join(testDir, 'custom.package.json');
+      await writeFile(
+        customPath,
+        JSON.stringify(
+          {
+            version: '3.0.0',
+            author: 'Custom Author',
+            license: 'MIT',
+          },
+          null,
+          2
+        )
+      );
+
+      // Convert to template with custom path
+      const caseVariants = generateCaseVariants('FooBarApp');
+      await convertToTemplate(
+        sourceDir,
+        caseVariants,
+        outputDir,
+        undefined,
+        customPath,
+        mockLogger
+      );
+
+      // Read generated package.json
+      const generatedPackageJson = JSON.parse(
+        await readFile(join(outputDir, 'package.json'), 'utf-8')
+      );
+
+      // Verify custom override is used
+      expect(generatedPackageJson.version).toBe('3.0.0');
+      expect(generatedPackageJson.author).toBe('Custom Author');
+      expect(generatedPackageJson.license).toBe('MIT');
+    });
+
+    it('should throw error when specified package.json override does not exist', async () => {
+      // Create a simple source file
+      await writeFile(join(sourceDir, 'index.js'), 'console.log("FooBarApp");');
+
+      // Try to convert with non-existent package.json override
+      const caseVariants = generateCaseVariants('FooBarApp');
+      const nonExistentPath = join(testDir, 'nonexistent.package.json');
+
+      await expect(
+        convertToTemplate(
+          sourceDir,
+          caseVariants,
+          outputDir,
+          undefined,
+          nonExistentPath,
+          mockLogger
+        )
       ).rejects.toThrow();
     });
   });

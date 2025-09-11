@@ -43,6 +43,10 @@ export const runCLI = (): void => {
       'Path to ignore file (default: .catdoublerignore)'
     )
     .option(
+      '--package-json <file>',
+      'Path to package.json override file (default: .catdoubler.package.json)'
+    )
+    .option(
       '--log-level <level>',
       'Set log level (debug, info, warn, error, ignore)',
       'info'
@@ -55,6 +59,7 @@ export const runCLI = (): void => {
         options: {
           output: string;
           ignorePath?: string;
+          packageJson?: string;
           logLevel: string;
           ignoreInit?: boolean;
         }
@@ -135,6 +140,7 @@ export const runCLI = (): void => {
             symbolNameCaseVariants,
             outputPath,
             options.ignorePath,
+            options.packageJson,
             logger
           );
 

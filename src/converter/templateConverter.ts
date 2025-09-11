@@ -3,7 +3,7 @@
 // Under MIT.
 // https://github.com/kekyo/cat-doubler
 
-import { mkdir, readFile, writeFile, cp } from 'fs/promises';
+import { mkdir, readFile, writeFile, cp, access } from 'fs/promises';
 import { join, dirname } from 'path';
 import { scanDirectory } from '../scanner/fileScanner';
 import { CaseVariants } from '../utils/caseUtils';
@@ -17,6 +17,7 @@ export const convertToTemplate = async (
   symbolNameCaseVariants: CaseVariants,
   outputPath: string,
   ignorePath: string | undefined,
+  packageJsonPath: string | undefined,
   logger: Logger
 ): Promise<void> => {
   logger.info('Phase 1: Scanning source directory...');
@@ -24,6 +25,36 @@ export const convertToTemplate = async (
 
   // Find safe placeholders
   const placeholders = await findSafePlaceholders(files, logger);
+
+  // Read package.json override if specified or if .catdoubler.package.json exists
+  let packageJsonOverride: Record<string, any> | undefined;
+  const defaultPackageJsonPath = join(sourcePath, '.catdoubler.package.json');
+  const effectivePackageJsonPath = packageJsonPath || defaultPackageJsonPath;
+
+  try {
+    // Check if the file exists
+    await access(effectivePackageJsonPath);
+    const packageJsonContent = await readFile(
+      effectivePackageJsonPath,
+      'utf-8'
+    );
+    packageJsonOverride = JSON.parse(packageJsonContent);
+    logger.info(
+      `  Found package.json override at: ${effectivePackageJsonPath}`
+    );
+  } catch (error) {
+    if (packageJsonPath) {
+      // User explicitly specified a file that doesn't exist or is invalid
+      logger.error(
+        `Error reading package.json override file: ${packageJsonPath}`
+      );
+      throw error;
+    }
+    // Default file doesn't exist, which is fine
+    logger.debug(
+      '  No .catdoubler.package.json found, using default package.json template'
+    );
+  }
 
   logger.debug('Case variants generated:');
   logger.debug(`  Original: ${symbolNameCaseVariants.original}`);
@@ -159,6 +190,7 @@ export const convertToTemplate = async (
     symbolNameCaseVariants.original,
     symbolNameCaseVariants,
     placeholders,
+    packageJsonOverride,
     logger
   );
 

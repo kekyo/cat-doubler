@@ -10,6 +10,7 @@ import { CaseVariants } from '../utils/caseUtils';
 import { PlaceholderSet } from '../converter/placeholderDetector';
 import { Logger } from '../utils/logger';
 import { git_commit_hash, version } from '../generated/packageMetadata';
+import { mergePackageJson } from '../utils/jsonMerger';
 
 interface TemplateFile {
   originalPath: string;
@@ -27,6 +28,7 @@ export const generateCliProject = async (
   originalSymbol: string,
   caseVariants: CaseVariants,
   placeholders: PlaceholderSet,
+  packageJsonOverride: Record<string, any> | undefined,
   logger: Logger
 ): Promise<void> => {
   // No helpers to register
@@ -73,7 +75,19 @@ export const generateCliProject = async (
   // Compile and write package.json
   const packageJsonCompiled = Handlebars.compile(packageJsonTemplate);
   const packageJsonContent = packageJsonCompiled(templateData);
-  await writeFile(join(outputPath, 'package.json'), packageJsonContent);
+
+  // Parse the generated package.json and merge with override if provided
+  let finalPackageJson = JSON.parse(packageJsonContent);
+  if (packageJsonOverride) {
+    finalPackageJson = mergePackageJson(finalPackageJson, packageJsonOverride);
+    logger.debug('  Merged package.json with override');
+  }
+
+  // Write the final package.json
+  await writeFile(
+    join(outputPath, 'package.json'),
+    JSON.stringify(finalPackageJson, null, 2)
+  );
 
   logger.debug('  Created package.json');
 

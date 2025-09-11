@@ -76,6 +76,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 
 - `-o, --output <path>`: Output directory for generated template (default: `./scaffolder`)
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
+- `--package-json <file>`: Path to package.json override file (default: `.catdoubler.package.json`)
 - `--ignore-init`: Initialize .catdoublerignore configuration file
 - `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
 - `-v, --version`: Display version number
@@ -124,6 +125,35 @@ Additionally, using all-lowercase symbol names like `webapi` prevents automatic 
 making conversions like `WebApi`, `webApi`, or `web-api` impossible.
 
 Therefore, when creating a template project, it is advisable to choose a name that is sufficiently complex and unlikely to match partial strings.
+
+### Customizing scaffolder package.json
+
+You can customize the `package.json` of the generated scaffolder by providing a `.catdoubler.package.json` file in your source directory. This file will be merged with the default template.
+
+Create `.catdoubler.package.json` file that containing appending/overriding values in your source directory:
+
+```json
+{
+  "version": "2.0.0",
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "axios": "^1.0.0"
+  }
+}
+```
+
+The values in this file will override or extend the default `package.json` template. `scripts` and `dependencies` are merged, while simple values are overridden.
+
+You can also specify a custom override file using the `--package-json` option:
+
+```bash
+cat-doubler --package-json ./custom-package.json . MyAwesomePage
+```
 
 ### Publishing scaffolder as NPM package
 

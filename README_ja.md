@@ -77,6 +77,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 
 - `-o, --output <path>`: 生成されたテンプレートの出力ディレクトリ（デフォルト：`./scaffolder`）
 - `--ignore-path <file>`: 除外ファイルのパス（デフォルト：`.catdoublerignore`）
+- `--package-json <file>`: package.jsonオーバーライドファイルのパス（デフォルト：`.catdoubler.package.json`）
 - `--ignore-init`: `.catdoublerignore`設定ファイルを初期化
 - `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）（デフォルト：`info`）
 - `-v, --version`: バージョン番号を表示
@@ -125,6 +126,35 @@ scaffolder/
 `WebApi`, `webApi`, `web-api` のような自動的な変換ができなくなります。
 
 従って、テンプレートとなるプロジェクトを作るときには、その名称をある程度複雑で部分一致しないような名称にすることが望ましいでしょう。
+
+### スキャフォールダーのpackage.jsonをカスタマイズ
+
+ソースディレクトリに `.catdoubler.package.json` ファイルを配置することで、生成されるスキャフォルダーの`package.json`をカスタマイズできます。このファイルはデフォルトのテンプレートとマージされます。
+
+ソースディレクトリに、追加・変更したい値を含む `.catdoubler.package.json` ファイルを作成します：
+
+```json
+{
+  "version": "2.0.0",
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "test": "vitest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "axios": "^1.0.0"
+  }
+}
+```
+
+このファイルの値はデフォルトの`package.json`テンプレートを上書きまたは拡張します。`scripts`と`dependencies`はマージされ、単純な値は上書きされます。
+
+`--package-json` オプションを使用して、カスタムオーバーライドファイルを指定することもできます：
+
+```bash
+cat-doubler --package-json ./custom-package.json . MyAwsomePage
+```
 
 ### スキャフォルダーをNPMパッケージとして公開
 

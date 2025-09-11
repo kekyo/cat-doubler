@@ -1,6 +1,6 @@
 {
   "name": "{{kebabCase}}-generator",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Template generator for {{originalSymbol}} projects",
   "keywords": [
     "generator",
@@ -15,15 +15,18 @@
   },
   "files": [
     "scaffolder.js",
-    "templates",
+    "templates/",
     "README.md"
   ],
   "scripts": {
-    "generate": "node scaffolder.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node scaffolder.js",
+    "pack": "screw-up pack",
+    "publish": "screw-up publish"
   },
   "engines": {
     "node": ">=14.0.0"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "screw-up": ">=1.7.0"
+  }
 }

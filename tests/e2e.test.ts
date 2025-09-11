@@ -111,7 +111,9 @@ npx foo-bar-app
         'utf-8'
       );
       expect(packageJson).toContain('foo-bar-app-generator');
-      expect(JSON.parse(packageJson).dependencies).toEqual({});
+      expect(JSON.parse(packageJson).engines).toEqual({
+        node: '>=14.0.0',
+      });
 
       const indexJs = await readFile(join(outputDir, 'scaffolder.js'), 'utf-8');
       expect(indexJs).toContain('#!/usr/bin/env node');
@@ -833,7 +835,7 @@ module.exports = { FooBarApp };`
       // Parse npm pack JSON output to get the filename
       const packInfo = JSON.parse(packOutput);
       const tarballName = packInfo[0].filename;
-      expect(tarballName).toBe('foo-bar-app-generator-1.0.0.tgz');
+      expect(tarballName).toBe('foo-bar-app-generator-0.0.1.tgz');
 
       const tarballPath = join(outputDir, tarballName);
 

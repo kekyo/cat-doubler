@@ -88,6 +88,7 @@ export const generateCliProject = async (
   const gitignoreContent = `node_modules/
 output/
 dist/
+*.tgz
 .env
 .env.local
 *.log

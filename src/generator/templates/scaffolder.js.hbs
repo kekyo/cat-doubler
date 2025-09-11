@@ -188,6 +188,25 @@ const copyAndTransform = async (src, dest, replacements, parentPath = '') => {
 
 // Main CLI logic
 const main = async () => {
+  const fs = require('fs').promises;
+  const path = require('path');
+  
+  // Get the directory where this script is located
+  // __dirname works correctly even when executed via npx or symlinked
+  const scriptDir = __dirname;
+  const packageJsonPath = path.join(scriptDir, 'package.json');
+  
+  // Display welcome banner with version from package.json
+  try {
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+    console.log(`Welcome to {{originalSymbol}} scaffolder [${packageJson.version}]`);
+    console.log('');
+  } catch (error) {
+    // Fallback if package.json cannot be read
+    console.log('Welcome to {{originalSymbol}} scaffolder');
+    console.log('');
+  }
+  
   const args = parseArgs(process.argv.slice(2));
   
   // Show help

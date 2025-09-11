@@ -35,6 +35,8 @@ cat-doubler ./my-component MyAwesomeComponent
 cd ./scaffolder
 npm run build
 
+Welcome to MyAwesomeComponent scaffolder [0.0.1]
+
 # 新しいプロジェクトの情報を入力
 Enter the new project name (in PascalCase): NewShinyComponent
 Output directory [./output/my-new-project]: ./new-shiny-component
@@ -209,6 +211,8 @@ npx my-awesome-page-generator
 ```bash
 # npxでスキャフォールダーを起動
 npx my-awesome-page-generator
+
+Welcome to MyAwesomePage scaffolder [0.0.1]
 
 # 以下のプロンプトが表示されます：
 Enter the new project name (in PascalCase): MyNewProject

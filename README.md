@@ -34,6 +34,8 @@ This generates a scaffolder that can create new components with any name. The fo
 cd ./scaffolder
 npm run build
 
+Welcome to MyAwesomeComponent scaffolder [0.0.1]
+
 # Enter new project details
 Enter the new project name (in PascalCase): NewShinyComponent
 Output directory [./output/my-new-project]: ./new-shiny-component
@@ -208,6 +210,8 @@ The generated scaffolder provides an interactive interface for creating new proj
 ```bash
 # Run scaffolder in npx command
 npx my-awesome-page-generator
+
+Welcome to MyAwesomePage scaffolder [0.0.1]
 
 # You'll be prompted for:
 Enter the new project name (in PascalCase): MyNewProject

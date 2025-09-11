@@ -272,6 +272,67 @@ const FooBarApp = 'Original';`
       expect(testTemplate).toContain('__pascal2__'); // New placeholder for FooBarApp
       expect(testTemplate).not.toContain('FooBarApp'); // FooBarApp should be replaced
     });
+
+    it('should clean output directory by default', async () => {
+      // Create existing content in output directory
+      await mkdir(outputDir, { recursive: true });
+      await writeFile(join(outputDir, 'existing.txt'), 'Old content');
+
+      // Create source project
+      await writeFile(join(sourceDir, 'app.js'), `const FooBarApp = 'test';`);
+
+      // Convert to template (default clean=true)
+      const caseVariants = generateCaseVariants('FooBarApp');
+      await convertToTemplate(
+        sourceDir,
+        caseVariants,
+        outputDir,
+        undefined,
+        undefined,
+        mockLogger
+      );
+
+      // Old file should be removed
+      await expect(
+        access(join(outputDir, 'existing.txt'), constants.F_OK)
+      ).rejects.toThrow();
+
+      // New template files should exist
+      await access(join(outputDir, 'scaffolder.js'), constants.F_OK);
+      await access(join(outputDir, 'templates', 'app.js'), constants.F_OK);
+    });
+
+    it('should preserve output directory when clean=false', async () => {
+      // Create existing content in output directory
+      await mkdir(outputDir, { recursive: true });
+      await writeFile(join(outputDir, 'existing.txt'), 'Old content');
+
+      // Create source project
+      await writeFile(join(sourceDir, 'app.js'), `const FooBarApp = 'test';`);
+
+      // Convert to template with clean=false
+      const caseVariants = generateCaseVariants('FooBarApp');
+      await convertToTemplate(
+        sourceDir,
+        caseVariants,
+        outputDir,
+        undefined,
+        undefined,
+        mockLogger,
+        false // Disable cleaning
+      );
+
+      // Old file should still exist
+      const oldContent = await readFile(
+        join(outputDir, 'existing.txt'),
+        'utf-8'
+      );
+      expect(oldContent).toBe('Old content');
+
+      // New template files should also exist
+      await access(join(outputDir, 'scaffolder.js'), constants.F_OK);
+      await access(join(outputDir, 'templates', 'app.js'), constants.F_OK);
+    });
   });
 
   describe('Generated Template Usage', () => {

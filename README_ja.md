@@ -93,6 +93,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `--ignore-path <file>`: 除外ファイルのパス（デフォルト：`.catdoublerignore`）
 - `--package-json <file>`: package.jsonオーバーライドファイルのパス（デフォルト：`.catdoubler.package.json`）
 - `--ignore-init`: `.catdoublerignore`設定ファイルを初期化
+- `--no-clean`: 生成前に出力ディレクトリをクリーンアップしない（デフォルトでは既存の出力ディレクトリは削除されます）
 - `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）（デフォルト：`info`）
 - `-v, --version`: バージョン番号を表示
 - `-h, --help`: コマンドのヘルプを表示

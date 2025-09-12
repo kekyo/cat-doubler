@@ -81,11 +81,11 @@ npm install -D cat-doubler
 ### 基本コマンド
 
 ```bash
-cat-doubler [options] <source-dir> <symbol-name>
+cat-doubler [options] <source-dir> [symbol-name]
 ```
 
 - `<source-dir>`: ソースプロジェクトを含むディレクトリ
-- `<symbol-name>`: プロジェクト全体で置換する名前（任意のケース形式：`PascalCase`、`camelCase`、`kebab-case`、`snake_case`など）
+- `[symbol-name]`: プロジェクト全体で置換する名前（任意のケース形式：`PascalCase`、`camelCase`、`kebab-case`、`snake_case`など）。省略時は `<source-dir>/.catdoublername` を読み込みます。
 
 ### オプション
 
@@ -262,9 +262,47 @@ cat-doubler . MyAwsomePage --just-now MyNewProject -o ./apps/my-new-project
 
 ## 高度な使い方
 
+### .catdoublername
+
+プロジェクトルートに `.catdoublername` を配置すると、CLI引数の `[symbol-name]` を省略できます（ファイルの中身がプロジェクト名）。
+これは、常に同じ変換を行うテンプレートプロジェクトの構築に有用です。
+
+- 両方指定されている場合は CLI 引数が優先されます。
+- `[symbol-name]` を省略し、かつ `.catdoublername` が存在しない場合はエラーになります。
+
 ### 除外パターン
 
 cat-doubler は組み込みのベースライン除外ルール（`.gitignore` 同等）を最初に適用し、その後にプロジェクト内の `.gitignore` と `.catdoublerignore` を階層的にマージします。ルールの上書きや再包含（`!`）は後勝ちです。必要に応じて `.catdoublerignore` を手動で作成してください。`--ignore-path` はプロジェクトルートの `.catdoublerignore` の場所指定に使え、`.gitignore` は従来どおり自動で探索・マージされます。
+
+以下に組み込みのベースライン除外ルールを示します:
+
+```
+node_modules/
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+dist/
+build/
+out/
+output/
+bin/
+obj/
+.git/
+.svn/
+.hg/
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.catdoublerignore
+.catdoubler.package.json
+.catdoublername
+```
 
 #### 階層的な除外ファイル
 
@@ -274,28 +312,6 @@ cat-doublerはGitと同様の階層的な除外パターンをサポートして
 - `.gitignore`が先に適用され、`.catdoublerignore`が後から上書きします
 - 親ディレクトリのルールはサブディレクトリのルールとマージされます
 - 後に現れるルールは前のルールを上書きできます（`!` 否定も可）
-
-以下に例を示します:
-
-```
-# Dependencies
-node_modules/
-*.lock
-package-lock.json
-
-# Build outputs
-dist/
-build/
-*.min.js
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-
-# Environment files
-.env*
-```
 
 ---
 

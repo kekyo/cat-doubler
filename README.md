@@ -80,11 +80,11 @@ npm install -D cat-doubler
 ### Basic command
 
 ```bash
-cat-doubler [options] <source-dir> <symbol-name>
+cat-doubler [options] <source-dir> [symbol-name]
 ```
 
 - `<source-dir>`: Directory containing your source project
-- `<symbol-name>`: The name to replace throughout the project (any case format: `PascalCase`, `camelCase`, `kebab-case`, `snake_case`, etc.)
+- `[symbol-name]`: The name to replace throughout the project (any case format: `PascalCase`, `camelCase`, `kebab-case`, `snake_case`, etc.). If omitted, cat-doubler reads the name from `<source-dir>/.catdoublername`.
 
 ### Options
 
@@ -261,9 +261,47 @@ Internally, cat-doubler creates a temporary scaffolder, runs it once with the ne
 
 ## Advanced Usage
 
+### .catdoublername
+
+Place `.catdoublername` in the project root to provide the symbol name when you prefer not to pass it on the command line.
+This is useful for building template projects that perform the same conversion consistently.
+
+- If both are provided, the CLI argument takes precedence.
+- If the symbol name is omitted and `.catdoublername` does not exist, cat-doubler exits with an error.
+
 ### Ignore Patterns
 
 cat-doubler seeds a built-in baseline ignore set (similar to `.gitignore`) and then merges `.gitignore` and `.catdoublerignore` files hierarchically. You can create `.catdoublerignore` manually to add or override rules. The `--ignore-path` option can point to a specific `.catdoublerignore` file at the project root; `.gitignore` files are still merged as usual.
+
+Here is a built-in baseline ignore set:
+
+```
+node_modules/
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+dist/
+build/
+out/
+output/
+bin/
+obj/
+.git/
+.svn/
+.hg/
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.catdoublerignore
+.catdoubler.package.json
+.catdoublername
+```
 
 #### Hierarchical ignore files
 
@@ -273,28 +311,6 @@ cat-doubler supports hierarchical ignore patterns similar to Git. You can place 
 - `.gitignore` rules are applied first; `.catdoublerignore` overrides
 - Rules from parent directories are merged with subdirectory rules
 - Later rules can override earlier ones (including via `!` negation)
-
-Here is an example:
-
-```
-# Dependencies
-node_modules/
-*.lock
-package-lock.json
-
-# Build outputs
-dist/
-build/
-*.min.js
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-
-# Environment files
-.env*
-```
 
 Place `.catdoublerignore` in the same directory as the template project, or specify its location using the `--ignore-path` option.
 

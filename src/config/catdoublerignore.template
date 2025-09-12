@@ -6,6 +6,10 @@ temp/
 .cache/
 dist/
 build/
+out/
+output/
+bin/
+obj/
 .git/
 .svn/
 .hg/
@@ -18,3 +22,4 @@ ehthumbs.db
 Thumbs.db
 .catdoublerignore
 .catdoubler.package.json
+.catdoublername

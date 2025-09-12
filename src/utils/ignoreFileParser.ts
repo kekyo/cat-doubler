@@ -54,12 +54,35 @@ const collectIgnoreFiles = async (
     currentPath = parent;
   }
 
-  // Check each directory for ignore files
+  // Check each directory for ignore files and merge rules.
+  // Ordering per directory: .gitignore (base) then .catdoublerignore (overrides)
   for (const dir of dirs) {
-    // Priority: .catdoublerignore > .gitignore
     const catdoublerignorePath = join(dir, '.catdoublerignore');
     const gitignorePath = join(dir, '.gitignore');
 
+    // First, load .gitignore if present
+    if (await fileExists(gitignorePath)) {
+      try {
+        const content = await readFile(gitignorePath, 'utf-8');
+        const patterns = content
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith('#'));
+
+        if (patterns.length > 0) {
+          ignoreFiles.push({
+            path: gitignorePath,
+            type: 'gitignore',
+            patterns,
+          });
+          logger.debug(`Found .gitignore in ${dir}`);
+        }
+      } catch (error) {
+        logger.debug(`Failed to read ${gitignorePath}: ${error}`);
+      }
+    }
+
+    // Then, load .catdoublerignore if present (overrides previous rules)
     if (await fileExists(catdoublerignorePath)) {
       try {
         const content = await readFile(catdoublerignorePath, 'utf-8');
@@ -78,25 +101,6 @@ const collectIgnoreFiles = async (
         }
       } catch (error) {
         logger.debug(`Failed to read ${catdoublerignorePath}: ${error}`);
-      }
-    } else if (await fileExists(gitignorePath)) {
-      try {
-        const content = await readFile(gitignorePath, 'utf-8');
-        const patterns = content
-          .split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line && !line.startsWith('#'));
-
-        if (patterns.length > 0) {
-          ignoreFiles.push({
-            path: gitignorePath,
-            type: 'gitignore',
-            patterns,
-          });
-          logger.debug(`Found .gitignore in ${dir}`);
-        }
-      } catch (error) {
-        logger.debug(`Failed to read ${gitignorePath}: ${error}`);
       }
     }
   }

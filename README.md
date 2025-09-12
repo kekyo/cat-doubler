@@ -278,10 +278,10 @@ This file like `.gitignore`, allows you to write glob patterns to exclude specif
 
 cat-doubler supports hierarchical ignore patterns similar to Git. You can place `.catdoublerignore` or `.gitignore` files in any subdirectory of your project:
 
-- `.catdoublerignore` takes precedence over `.gitignore` in the same directory
-- If `.catdoublerignore` doesn't exist, `.gitignore` will be used as a fallback
+- Both files are merged per directory
+- `.gitignore` rules are applied first; `.catdoublerignore` overrides
 - Rules from parent directories are merged with subdirectory rules
-- Subdirectory rules can override parent rules
+- Later rules can override earlier ones (including via `!` negation)
 
 Here is an example:
 

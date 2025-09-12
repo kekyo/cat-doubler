@@ -279,10 +279,10 @@ cat-doubler --ignore-init
 
 cat-doublerはGitと同様の階層的な除外パターンをサポートしています。プロジェクトの任意のサブディレクトリに`.catdoublerignore`または`.gitignore`ファイルを配置できます：
 
-- 同じディレクトリでは`.catdoublerignore`が`.gitignore`より優先されます
-- `.catdoublerignore`が存在しない場合、`.gitignore`がフォールバックとして使用されます
+- 同一ディレクトリでは両方のファイルをマージします
+- `.gitignore`が先に適用され、`.catdoublerignore`が後から上書きします
 - 親ディレクトリのルールはサブディレクトリのルールとマージされます
-- サブディレクトリのルールは親のルールを上書きできます
+- 後に現れるルールは前のルールを上書きできます（`!` 否定も可）
 
 以下に例を示します:
 

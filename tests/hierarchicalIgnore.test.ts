@@ -74,23 +74,22 @@ build/`
       );
     });
 
-    it('should prefer .catdoublerignore over .gitignore in same directory', async () => {
-      // Create both files
-      await writeFile(join(testDir, '.catdoublerignore'), `*.cat`);
-      await writeFile(
-        join(testDir, '.gitignore'),
-        `*.git
-*.cat` // This should be ignored since .catdoublerignore takes precedence
-      );
+    it('should merge .gitignore and .catdoublerignore; latter can override', async () => {
+      // Create both files: .gitignore provides base rules, .catdoublerignore overrides
+      await writeFile(join(testDir, '.catdoublerignore'), `!*.git\n*.cat`);
+      await writeFile(join(testDir, '.gitignore'), `*.git\n*.tmp`);
 
       const manager = await createHierarchicalIgnoreManager(
         testDir,
         mockLogger
       );
 
-      // Only .catdoublerignore patterns should apply
+      // *.git is un-ignored by .catdoublerignore override
+      expect(await manager.isIgnored(join(testDir, 'file.git'))).toBe(false);
+      // *.cat is ignored by .catdoublerignore
       expect(await manager.isIgnored(join(testDir, 'file.cat'))).toBe(true);
-      expect(await manager.isIgnored(join(testDir, 'file.git'))).toBe(false); // .gitignore ignored
+      // *.tmp remains ignored from .gitignore (no override)
+      expect(await manager.isIgnored(join(testDir, 'file.tmp'))).toBe(true);
     });
   });
 

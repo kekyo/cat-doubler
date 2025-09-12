@@ -93,13 +93,12 @@ src/**/*.test.js
         )
       ).toBe(false);
 
-      // Default patterns are NOT inherited when custom ignore file exists
-      // (This is standard .gitignore behavior)
+      // Built-in baseline patterns are always applied in addition to custom files
       expect(
         await Promise.resolve(
           manager.isIgnored(join(testDir, 'node_modules', 'package.json'))
         )
-      ).toBe(false);
+      ).toBe(true);
     });
 
     it('should load patterns from custom ignore file path', async () => {

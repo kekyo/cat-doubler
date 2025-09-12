@@ -91,7 +91,6 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `-o, --output <path>`: Output directory for generated template (default: `./scaffolder`)
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
 - `--package-json <file>`: Path to package.json override file (default: `.catdoubler.package.json`)
-- `--ignore-init`: Initialize .catdoublerignore configuration file
 - `--no-clean`: Do not clean the output directory before generating (by default, existing output directory is removed)
 - `-j, --just-now <new-name>`: Generate a temporary scaffolder and immediately create a project named `<new-name>`
 - `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
@@ -264,15 +263,7 @@ Internally, cat-doubler creates a temporary scaffolder, runs it once with the ne
 
 ### Ignore Patterns
 
-Generate a default `.catdoublerignore` configuration file in current directory:
-
-```bash
-cat-doubler --ignore-init
-```
-
-If the file already exists, it will be skipped.
-
-This file like `.gitignore`, allows you to write glob patterns to exclude specified files and directories from the template project. If the generated scaffolder does not contain the necessary files or contains extra files, you can adjust them with this file.
+cat-doubler seeds a built-in baseline ignore set (similar to `.gitignore`) and then merges `.gitignore` and `.catdoublerignore` files hierarchically. You can create `.catdoublerignore` manually to add or override rules. The `--ignore-path` option can point to a specific `.catdoublerignore` file at the project root; `.gitignore` files are still merged as usual.
 
 #### Hierarchical ignore files
 
@@ -305,7 +296,7 @@ build/
 .env*
 ```
 
-Place this file in the same directory as the template project, or specify its location using the `--ignore-path` option.
+Place `.catdoublerignore` in the same directory as the template project, or specify its location using the `--ignore-path` option.
 
 ---
 

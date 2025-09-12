@@ -92,7 +92,6 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `-o, --output <path>`: 生成されたテンプレートの出力ディレクトリ（デフォルト：`./scaffolder`）
 - `--ignore-path <file>`: 除外ファイルのパス（デフォルト：`.catdoublerignore`）
 - `--package-json <file>`: package.jsonオーバーライドファイルのパス（デフォルト：`.catdoubler.package.json`）
-- `--ignore-init`: `.catdoublerignore`設定ファイルを初期化
 - `--no-clean`: 生成前に出力ディレクトリをクリーンアップしない（デフォルトでは既存の出力ディレクトリは削除されます）
 - `-j, --just-now <newName>`: 一時スキャフォールダーを生成して即座に `<newName>` のプロジェクトを生成
 - `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）（デフォルト：`info`）
@@ -265,15 +264,7 @@ cat-doubler . MyAwsomePage --just-now MyNewProject -o ./apps/my-new-project
 
 ### 除外パターン
 
-カレントディレクトリに、デフォルトの`.catdoublerignore`ファイルを生成します：
-
-```bash
-cat-doubler --ignore-init
-```
-
-ファイルが既に存在する場合はスキップされます。
-
-このファイルは、`.gitignore`と同じように、グロブパターンを記述し、テンプレートプロジェクトから、指定されたファイルとディレクトリを除外出来ます。もし、生成したスキャフォールダーに、必要なファイルを含んでいなかったり余計なファイルが含まれていた場合は、このファイルで調整すると良いでしょう。
+cat-doubler は組み込みのベースライン除外ルール（`.gitignore` 同等）を最初に適用し、その後にプロジェクト内の `.gitignore` と `.catdoublerignore` を階層的にマージします。ルールの上書きや再包含（`!`）は後勝ちです。必要に応じて `.catdoublerignore` を手動で作成してください。`--ignore-path` はプロジェクトルートの `.catdoublerignore` の場所指定に使え、`.gitignore` は従来どおり自動で探索・マージされます。
 
 #### 階層的な除外ファイル
 

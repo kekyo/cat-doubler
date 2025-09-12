@@ -109,7 +109,7 @@ node_modules/`
       await writeFile(
         join(testDir, 'src', '.gitignore'),
         `*.test.js
-temp/`
+scratch/`
       );
 
       const manager = await createHierarchicalIgnoreManager(
@@ -136,14 +136,14 @@ temp/`
         )
       ).toBe(true);
       expect(
-        await manager.isIgnored(join(testDir, 'src', 'temp', 'cache.json'))
+        await manager.isIgnored(join(testDir, 'src', 'scratch', 'cache.json'))
       ).toBe(true);
 
       // src patterns should NOT apply outside src
       expect(await manager.isIgnored(join(testDir, 'app.test.js'))).toBe(false);
-      expect(await manager.isIgnored(join(testDir, 'temp', 'cache.json'))).toBe(
-        false
-      );
+      expect(
+        await manager.isIgnored(join(testDir, 'scratch', 'cache.json'))
+      ).toBe(false);
     });
 
     it('should allow subdirectory rules to override parent rules', async () => {
@@ -323,11 +323,17 @@ special/`
       );
 
       // Should only use the specified file
-      expect(manager.isIgnored(join(testDir, 'file.custom'))).toBe(true);
-      expect(manager.isIgnored(join(testDir, 'special', 'file.txt'))).toBe(
-        true
-      );
-      expect(manager.isIgnored(join(testDir, 'regular.txt'))).toBe(false);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'file.custom')))
+      ).toBe(true);
+      expect(
+        await Promise.resolve(
+          manager.isIgnored(join(testDir, 'special', 'file.txt'))
+        )
+      ).toBe(true);
+      expect(
+        await Promise.resolve(manager.isIgnored(join(testDir, 'regular.txt')))
+      ).toBe(false);
     });
 
     it('should use hierarchical mode when no specific path provided', async () => {

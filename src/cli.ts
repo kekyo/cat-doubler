@@ -15,7 +15,6 @@ import {
 } from './generated/packageMetadata';
 import { createConsoleLogger, LogLevel } from './utils/logger';
 import { generateCaseVariants } from './utils/caseUtils';
-import { initializeConfigFiles } from './utils/configInitializer';
 import { tmpdir } from 'os';
 import { spawn } from 'child_process';
 
@@ -57,7 +56,6 @@ export const runCLI = (): void => {
       'Set log level (debug, info, warn, error, ignore)',
       'info'
     )
-    .option('--ignore-init', 'Initialize .catdoublerignore configuration file')
     .option('--no-clean', 'Do not clean the output directory before generating')
     .action(
       async (
@@ -92,19 +90,7 @@ export const runCLI = (): void => {
         // Create logger
         const logger = createConsoleLogger('cat-doubler', logLevel);
 
-        // Check if --ignore-init option was provided
-        if (options.ignoreInit) {
-          logger.info('Initializing .catdoublerignore configuration file...\n');
-          try {
-            await initializeConfigFiles(logger);
-          } catch (error) {
-            logger.error(`Error initializing configuration file: ${error}`);
-            process.exit(1);
-          }
-          process.exit(0);
-        }
-
-        // If --ignore-init is not provided, source-dir and symbol-name are required
+        // source-dir and symbol-name are required
         if (!sourceDir || !symbolName) {
           logger.error(
             'Error: source-dir and symbol-name arguments are required'
@@ -112,7 +98,6 @@ export const runCLI = (): void => {
           logger.info(
             'Usage: cat-doubler <source-dir> <symbol-name> [options]'
           );
-          logger.info('   or: cat-doubler --ignore-init');
           process.exit(1);
         }
 

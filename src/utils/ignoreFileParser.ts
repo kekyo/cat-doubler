@@ -19,6 +19,9 @@ export interface IgnoreFileInfo {
   path: string;
   type: 'catdoublerignore' | 'gitignore';
   patterns: string[];
+  // Optional base directory hint used for pattern adjustment
+  // If provided, patterns are treated as if they were defined in this directory
+  baseDir?: string;
 }
 
 export interface HierarchicalIgnoreManager extends IgnoreManager {
@@ -39,7 +42,8 @@ const fileExists = async (filePath: string): Promise<boolean> => {
 const collectIgnoreFiles = async (
   rootPath: string,
   targetPath: string,
-  logger: Logger
+  logger: Logger,
+  options?: { rootCatIgnorePath?: string }
 ): Promise<IgnoreFileInfo[]> => {
   const ignoreFiles: IgnoreFileInfo[] = [];
   const dirs: string[] = [];
@@ -57,7 +61,11 @@ const collectIgnoreFiles = async (
   // Check each directory for ignore files and merge rules.
   // Ordering per directory: .gitignore (base) then .catdoublerignore (overrides)
   for (const dir of dirs) {
-    const catdoublerignorePath = join(dir, '.catdoublerignore');
+    // For root directory, allow overriding the .catdoublerignore location via options
+    const catdoublerignorePath =
+      dir === rootPath && options?.rootCatIgnorePath
+        ? options.rootCatIgnorePath
+        : join(dir, '.catdoublerignore');
     const gitignorePath = join(dir, '.gitignore');
 
     // First, load .gitignore if present
@@ -92,10 +100,17 @@ const collectIgnoreFiles = async (
           .filter((line) => line && !line.startsWith('#'));
 
         if (patterns.length > 0) {
+          // If the root .catdoublerignore path is overridden and is outside the source root,
+          // we treat its patterns as if they were defined at the source root for adjustment purposes.
+          const baseDirHint =
+            dir === rootPath && options?.rootCatIgnorePath
+              ? rootPath
+              : undefined;
           ignoreFiles.push({
             path: catdoublerignorePath,
             type: 'catdoublerignore',
             patterns,
+            baseDir: baseDirHint,
           });
           logger.debug(`Found .catdoublerignore in ${dir}`);
         }
@@ -111,7 +126,8 @@ const collectIgnoreFiles = async (
 // Create a hierarchical ignore manager
 export const createHierarchicalIgnoreManager = async (
   sourcePath: string,
-  logger: Logger
+  logger: Logger,
+  opts?: { rootCatIgnorePath?: string }
 ): Promise<HierarchicalIgnoreManager> => {
   // Cache for ignore instances by the deepest ignore file directory
   const ignoreCache = new Map<string, ignore.Ignore>();
@@ -127,7 +143,9 @@ export const createHierarchicalIgnoreManager = async (
     if (ignoreFilesCache.has(dir)) {
       ignoreFiles = ignoreFilesCache.get(dir)!;
     } else {
-      ignoreFiles = await collectIgnoreFiles(sourcePath, dir, logger);
+      ignoreFiles = await collectIgnoreFiles(sourcePath, dir, logger, {
+        rootCatIgnorePath: opts?.rootCatIgnorePath,
+      });
       ignoreFilesCache.set(dir, ignoreFiles);
     }
 
@@ -147,46 +165,44 @@ export const createHierarchicalIgnoreManager = async (
     // Create merged ignore instance
     const ig = ignore();
 
-    // If no ignore files found, use default template
-    if (ignoreFiles.length === 0) {
-      ig.add(catdoublerignoreTemplate);
-      logger.debug('No ignore files found, using default template');
-    } else {
-      // Add patterns from all ignore files (root to target)
-      for (const ignoreFile of ignoreFiles) {
-        // Adjust patterns to be relative to the source path
-        const ignoreDir = dirname(ignoreFile.path);
-        const relativeToSource = relative(sourcePath, ignoreDir);
+    // Always seed with built-in baseline template first
+    ig.add(catdoublerignoreTemplate);
+    logger.debug('Seeded ignore with built-in baseline template');
 
-        const adjustedPatterns = ignoreFile.patterns.map((pattern) => {
-          // If we're not in the root directory, we need to adjust patterns
-          if (relativeToSource) {
-            if (pattern.startsWith('!')) {
-              // Handle negation patterns
-              const negatedPattern = pattern.substring(1);
-              if (negatedPattern.startsWith('/')) {
-                // Absolute negation pattern - make it relative to source root
-                return `!${relativeToSource}${negatedPattern}`;
-              } else {
-                // Relative negation pattern - applies recursively, no adjustment needed
-                return pattern;
-              }
-            } else if (pattern.startsWith('/')) {
-              // Absolute pattern - make it relative to source root
-              return `${relativeToSource}${pattern}`;
+    // Add patterns from all ignore files (root to target)
+    for (const ignoreFile of ignoreFiles) {
+      // Adjust patterns to be relative to the source path
+      const ignoreDir = ignoreFile.baseDir ?? dirname(ignoreFile.path);
+      const relativeToSource = relative(sourcePath, ignoreDir);
+
+      const adjustedPatterns = ignoreFile.patterns.map((pattern) => {
+        // If we're not in the root directory, we need to adjust patterns
+        if (relativeToSource) {
+          if (pattern.startsWith('!')) {
+            // Handle negation patterns
+            const negatedPattern = pattern.substring(1);
+            if (negatedPattern.startsWith('/')) {
+              // Absolute negation pattern - make it relative to source root
+              return `!${relativeToSource}${negatedPattern}`;
             } else {
-              // Relative pattern - applies recursively, no adjustment needed
+              // Relative negation pattern - applies recursively, no adjustment needed
               return pattern;
             }
+          } else if (pattern.startsWith('/')) {
+            // Absolute pattern - make it relative to source root
+            return `${relativeToSource}${pattern}`;
+          } else {
+            // Relative pattern - applies recursively, no adjustment needed
+            return pattern;
           }
-          return pattern;
-        });
+        }
+        return pattern;
+      });
 
-        ig.add(adjustedPatterns);
-        logger.debug(
-          `Added ${ignoreFile.patterns.length} patterns from ${ignoreFile.path}`
-        );
-      }
+      ig.add(adjustedPatterns);
+      logger.debug(
+        `Added ${ignoreFile.patterns.length} patterns from ${ignoreFile.path}`
+      );
     }
 
     ignoreCache.set(cacheKey, ig);
@@ -224,32 +240,21 @@ export const createIgnoreManager = async (
   sourcePath: string,
   logger: Logger
 ): Promise<IgnoreManager> => {
-  // If a specific ignore path is provided, use the old behavior
+  // If a specific ignore path is provided, treat it as the location of the root .catdoublerignore
+  // and still use hierarchical merging with .gitignore and subdirectory rules.
   if (ignorePath) {
-    const ig = ignore();
     try {
-      const content = await readFile(ignorePath, 'utf-8');
-      ig.add(content);
-      logger.info(`Loaded patterns from ${ignorePath}`);
-    } catch (error: any) {
+      await access(ignorePath);
+    } catch {
       throw new Error(`Specified ignore file not found: ${ignorePath}`);
     }
-
-    return {
-      isIgnored(filePath: string): boolean {
-        const relativePath = relative(sourcePath, filePath);
-        return ig.ignores(relativePath);
-      },
-      addPatterns(patterns: string[]): void {
-        ig.add(patterns);
-      },
-      getPatternCount(): number {
-        return 0;
-      },
-    };
+    logger.info(`Using .catdoublerignore at: ${ignorePath}`);
+    return createHierarchicalIgnoreManager(sourcePath, logger, {
+      rootCatIgnorePath: ignorePath,
+    });
   }
 
-  // Otherwise, use the new hierarchical manager
+  // No specific path provided: use hierarchical manager with autodetected .catdoublerignore locations
   return createHierarchicalIgnoreManager(sourcePath, logger);
 };
 

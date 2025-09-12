@@ -5,7 +5,7 @@
 
 import { Command } from 'commander';
 import { resolve, join } from 'path';
-import { access, stat, mkdtemp, rm } from 'fs/promises';
+import { access, stat, mkdtemp, rm, readFile } from 'fs/promises';
 import { convertToTemplate } from './converter/templateConverter';
 import {
   description,
@@ -15,7 +15,6 @@ import {
 } from './generated/packageMetadata';
 import { createConsoleLogger, LogLevel } from './utils/logger';
 import { generateCaseVariants } from './utils/caseUtils';
-import { initializeConfigFiles } from './utils/configInitializer';
 import { tmpdir } from 'os';
 import { spawn } from 'child_process';
 
@@ -57,7 +56,6 @@ export const runCLI = (): void => {
       'Set log level (debug, info, warn, error, ignore)',
       'info'
     )
-    .option('--ignore-init', 'Initialize .catdoublerignore configuration file')
     .option('--no-clean', 'Do not clean the output directory before generating')
     .action(
       async (
@@ -92,35 +90,17 @@ export const runCLI = (): void => {
         // Create logger
         const logger = createConsoleLogger('cat-doubler', logLevel);
 
-        // Check if --ignore-init option was provided
-        if (options.ignoreInit) {
-          logger.info('Initializing .catdoublerignore configuration file...\n');
-          try {
-            await initializeConfigFiles(logger);
-          } catch (error) {
-            logger.error(`Error initializing configuration file: ${error}`);
-            process.exit(1);
-          }
-          process.exit(0);
-        }
-
-        // If --ignore-init is not provided, source-dir and symbol-name are required
-        if (!sourceDir || !symbolName) {
-          logger.error(
-            'Error: source-dir and symbol-name arguments are required'
-          );
+        // source-dir is required
+        if (!sourceDir) {
+          logger.error('Error: source-dir argument is required');
           logger.info(
             'Usage: cat-doubler <source-dir> <symbol-name> [options]'
           );
-          logger.info('   or: cat-doubler --ignore-init');
           process.exit(1);
         }
 
         try {
           logger.info(`${version}-${git_commit_hash}: Started.`);
-
-          // Validate symbol name
-          const symbolNameCaseVariants = generateCaseVariants(symbolName);
 
           const sourcePath = resolve(process.cwd(), sourceDir);
           const outputPath = resolve(process.cwd(), options.output);
@@ -139,6 +119,38 @@ export const runCLI = (): void => {
             logger.error(`"${sourcePath}" is not a directory`);
             process.exit(1);
           }
+
+          // Resolve symbol name: CLI arg takes precedence; otherwise try .catdoublername at project root
+          if (!symbolName) {
+            try {
+              const nameFilePath = join(sourcePath, '.catdoublername');
+              await access(nameFilePath);
+              const fileContent = (
+                await readFile(nameFilePath, 'utf-8')
+              ).trim();
+              if (!fileContent) {
+                logger.error(
+                  'Error: .catdoublername is empty. Provide <symbol-name> or fill .catdoublername.'
+                );
+                process.exit(1);
+              }
+              symbolName = fileContent;
+              logger.info(
+                `Using symbol name from .catdoublername: ${symbolName}`
+              );
+            } catch {
+              logger.error(
+                'Error: symbol-name not provided and .catdoublername not found in source root'
+              );
+              logger.info(
+                'Usage: cat-doubler <source-dir> <symbol-name> [options]'
+              );
+              process.exit(1);
+            }
+          }
+
+          // Validate symbol name (generate variants)
+          const symbolNameCaseVariants = generateCaseVariants(symbolName);
 
           // Just-now flow: create temp scaffolder and immediately run it
           if (options.justNow) {

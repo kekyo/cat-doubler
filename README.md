@@ -80,18 +80,17 @@ npm install -D cat-doubler
 ### Basic command
 
 ```bash
-cat-doubler [options] <source-dir> <symbol-name>
+cat-doubler [options] <source-dir> [symbol-name]
 ```
 
 - `<source-dir>`: Directory containing your source project
-- `<symbol-name>`: The name to replace throughout the project (any case format: `PascalCase`, `camelCase`, `kebab-case`, `snake_case`, etc.)
+- `[symbol-name]`: The name to replace throughout the project (any case format: `PascalCase`, `camelCase`, `kebab-case`, `snake_case`, etc.). If omitted, cat-doubler reads the name from `<source-dir>/.catdoublername`.
 
 ### Options
 
 - `-o, --output <path>`: Output directory for generated template (default: `./scaffolder`)
 - `--ignore-path <file>`: Path to ignore file (default: `.catdoublerignore`)
 - `--package-json <file>`: Path to package.json override file (default: `.catdoubler.package.json`)
-- `--ignore-init`: Initialize .catdoublerignore configuration file
 - `--no-clean`: Do not clean the output directory before generating (by default, existing output directory is removed)
 - `-j, --just-now <new-name>`: Generate a temporary scaffolder and immediately create a project named `<new-name>`
 - `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
@@ -262,50 +261,58 @@ Internally, cat-doubler creates a temporary scaffolder, runs it once with the ne
 
 ## Advanced Usage
 
+### .catdoublername
+
+Place `.catdoublername` in the project root to provide the symbol name when you prefer not to pass it on the command line.
+This is useful for building template projects that perform the same conversion consistently.
+
+- If both are provided, the CLI argument takes precedence.
+- If the symbol name is omitted and `.catdoublername` does not exist, cat-doubler exits with an error.
+
 ### Ignore Patterns
 
-Generate a default `.catdoublerignore` configuration file in current directory:
+cat-doubler seeds a built-in baseline ignore set (similar to `.gitignore`) and then merges `.gitignore` and `.catdoublerignore` files hierarchically. You can create `.catdoublerignore` manually to add or override rules. The `--ignore-path` option can point to a specific `.catdoublerignore` file at the project root; `.gitignore` files are still merged as usual.
 
-```bash
-cat-doubler --ignore-init
+Here is a built-in baseline ignore set:
+
 ```
-
-If the file already exists, it will be skipped.
-
-This file like `.gitignore`, allows you to write glob patterns to exclude specified files and directories from the template project. If the generated scaffolder does not contain the necessary files or contains extra files, you can adjust them with this file.
+node_modules/
+tmp/
+temp/
+.tmp/
+.temp/
+.cache/
+dist/
+build/
+out/
+output/
+bin/
+obj/
+.git/
+.svn/
+.hg/
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.catdoublerignore
+.catdoubler.package.json
+.catdoublername
+```
 
 #### Hierarchical ignore files
 
 cat-doubler supports hierarchical ignore patterns similar to Git. You can place `.catdoublerignore` or `.gitignore` files in any subdirectory of your project:
 
-- `.catdoublerignore` takes precedence over `.gitignore` in the same directory
-- If `.catdoublerignore` doesn't exist, `.gitignore` will be used as a fallback
+- Both files are merged per directory
+- `.gitignore` rules are applied first; `.catdoublerignore` overrides
 - Rules from parent directories are merged with subdirectory rules
-- Subdirectory rules can override parent rules
+- Later rules can override earlier ones (including via `!` negation)
 
-Here is an example:
-
-```
-# Dependencies
-node_modules/
-*.lock
-package-lock.json
-
-# Build outputs
-dist/
-build/
-*.min.js
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-
-# Environment files
-.env*
-```
-
-Place this file in the same directory as the template project, or specify its location using the `--ignore-path` option.
+Place `.catdoublerignore` in the same directory as the template project, or specify its location using the `--ignore-path` option.
 
 ---
 

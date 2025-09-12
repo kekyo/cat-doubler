@@ -93,6 +93,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `--package-json <file>`: Path to package.json override file (default: `.catdoubler.package.json`)
 - `--ignore-init`: Initialize .catdoublerignore configuration file
 - `--no-clean`: Do not clean the output directory before generating (by default, existing output directory is removed)
+- `-j, --just-now <new-name>`: Generate a temporary scaffolder and immediately create a project named `<new-name>`
 - `--log-level <level>`: Set log level (debug, info, warn, error, ignore) (default: `info`)
 - `-v, --version`: Display version number
 - `-h, --help`: Display help for command
@@ -237,6 +238,25 @@ node scaffolder.js MyNewProject ./my-project
 # Or specify with named options
 node scaffolder.js --symbolName MyNewProject --outputDir ./my-project
 ```
+
+### Just-now mode (generate immediately)
+
+If you want to skip emitting the scaffolder and instead directly generate a new project immediately, use `--just-now` or `-j`.
+Using this mode, you can instantly generate projects with only the name changed.
+
+In this mode, `-o, --output` indicates the destination for the newly generated project (not the scaffolder). If omitted, it defaults to `./output/<kebab-cased-new-name>`.
+
+The following example renames a project named `MyAwsomePage` to `MyNewProject` and generates it on the spot:
+
+```bash
+# Convert to a temporary scaffolder and immediately generate a project
+cat-doubler . MyAwesomePage --just-now MyNewProject
+
+# Specify the output directory for the generated project
+cat-doubler . MyAwesomePage --just-now MyNewProject -o ./apps/my-new-project
+```
+
+Internally, cat-doubler creates a temporary scaffolder, runs it once with the new name, and then removes the temporary scaffolder directory.
 
 ---
 

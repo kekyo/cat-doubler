@@ -983,6 +983,119 @@ module.exports = { FooBarApp };`
       expect(genIndexFile).toContain('TestPackedProject');
       expect(genIndexFile).not.toContain('FooBarApp');
     });
+
+    it('should support just-now mode to generate a project immediately (default output)', async () => {
+      // Prepare a source project
+      await writeFile(
+        join(sourceDir, 'package.json'),
+        JSON.stringify(
+          {
+            name: 'foo-bar-app',
+            version: '1.0.0',
+            description: 'FooBarApp project',
+          },
+          null,
+          2
+        )
+      );
+
+      await mkdir(join(sourceDir, 'src'), { recursive: true });
+      await writeFile(
+        join(sourceDir, 'src', 'FooBarApp.js'),
+        `// Main FooBarApp module
+export class FooBarApp {
+  constructor() {
+    this.name = 'FooBarApp';
+    this.id = 'foo-bar-app';
+    this.constant = 'FOO_BAR_APP';
+  }
+  
+  start() {
+    return 'foo_bar_app';
+  }
+}
+
+export const fooBarApp = new FooBarApp();`
+      );
+
+      await writeFile(
+        join(sourceDir, 'README.md'),
+        `# FooBarApp\n\nWelcome to FooBarApp!\n`
+      );
+
+      // Run CLI in just-now mode
+      const cliPath = join(process.cwd(), 'dist', 'index.js');
+      const { stdout, stderr } = await execAsync(
+        `node "${cliPath}" "${sourceDir}" FooBarApp --just-now MyAwesomeProject`,
+        {
+          cwd: testDir,
+          timeout: 60000,
+        }
+      );
+
+      // Try to detect the output path from CLI logs, fallback to defaults
+      let generatedProjectDir: string | undefined;
+      const lines = stdout.split(/\r?\n/).filter(Boolean);
+      const runLine = lines.find((l) =>
+        l.includes('Running scaffolder to generate project')
+      );
+      if (runLine) {
+        const match = runLine.match(/at: (.*)$/);
+        if (match) {
+          generatedProjectDir = match[1];
+        }
+      }
+      if (!generatedProjectDir) {
+        // Prefer the expected testDir path; if not found, fallback to repo root
+        const candidate = join(testDir, 'output', 'my-awesome-project');
+        try {
+          await access(candidate, constants.F_OK);
+          generatedProjectDir = candidate;
+        } catch {
+          const alt = join(process.cwd(), 'output', 'my-awesome-project');
+          await access(alt, constants.F_OK);
+          generatedProjectDir = alt;
+        }
+      } else {
+        // Verify parsed path exists
+        await access(generatedProjectDir, constants.F_OK);
+      }
+
+      const pkg = JSON.parse(
+        await readFile(join(generatedProjectDir, 'package.json'), 'utf-8')
+      );
+      expect(pkg.name).toBe('my-awesome-project');
+
+      const mainFile = await readFile(
+        join(generatedProjectDir, 'src', 'MyAwesomeProject.js'),
+        'utf-8'
+      );
+      expect(mainFile).toContain('class MyAwesomeProject');
+      expect(mainFile).toContain('my-awesome-project');
+      expect(mainFile).toContain('MY_AWESOME_PROJECT');
+      expect(mainFile).toContain('myAwesomeProject');
+      expect(mainFile).not.toContain('FooBarApp');
+    });
+
+    it('should use -o/--output as project destination in just-now mode', async () => {
+      // Prepare a minimal source
+      await writeFile(
+        join(sourceDir, 'index.js'),
+        `export const FooBarApp = () => 'fooBarApp';`
+      );
+
+      const customOut = join(testDir, 'custom-out');
+      const cliPath = join(process.cwd(), 'dist', 'index.js');
+      const { stdout } = await execAsync(
+        `node "${cliPath}" "${sourceDir}" FooBarApp --just-now MyProj -o "${customOut}"`,
+        { cwd: testDir, timeout: 60000 }
+      );
+
+      await access(customOut, constants.F_OK);
+      // Check a file exists (name transformed)
+      const files = await readFile(join(customOut, 'index.js'), 'utf-8');
+      expect(files).not.toContain('__');
+    });
   });
 
   describe('Ignore File Functionality', () => {

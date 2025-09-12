@@ -47,6 +47,15 @@ If you publish the scaffolder as a package, you can run it with just the npx com
 npx my-awesome-component-generator
 ```
 
+## Key Features
+
+- Automatic case detection: Analysing and replaces all case variations of your symbol name
+- Any target project type: Supports all types of projects, mixed projects, and management of text files that are not programming-language specific projects
+- Standalone output: Generated templates have zero runtime dependencies
+- Zero configuration: Works out of the box with sensible defaults
+- Flexible ignore patterns: Support for .catdoublerignore files similar to .gitignore
+- Automatic text/binary file detection: Automatically analyzes file contents to identify text files
+
 ---
 
 ## Installation

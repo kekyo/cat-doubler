@@ -94,6 +94,7 @@ cat-doubler [options] <source-dir> <symbol-name>
 - `--package-json <file>`: package.jsonオーバーライドファイルのパス（デフォルト：`.catdoubler.package.json`）
 - `--ignore-init`: `.catdoublerignore`設定ファイルを初期化
 - `--no-clean`: 生成前に出力ディレクトリをクリーンアップしない（デフォルトでは既存の出力ディレクトリは削除されます）
+- `-j, --just-now <newName>`: 一時スキャフォールダーを生成して即座に `<newName>` のプロジェクトを生成
 - `--log-level <level>`: ログレベルを設定（debug、info、warn、error、ignore）（デフォルト：`info`）
 - `-v, --version`: バージョン番号を表示
 - `-h, --help`: コマンドのヘルプを表示
@@ -238,6 +239,25 @@ node scaffolder.js MyNewProject ./my-project
 # または名前付きオプションで指定
 node scaffolder.js --symbolName MyNewProject --outputDir ./my-project
 ```
+
+### Just-nowモード（即時生成）
+
+スキャフォールダーを出力せず、即座に新しいプロジェクトを生成したい場合は `--just-now` または `-j` を使用します。
+このモードを使用すれば、名称だけを変更したプロジェクトを即座に生成できます。
+
+このモードでは、`-o, --output` はスキャフォールダーの出力先ではなく「生成される新しいプロジェクトの出力先」を指します。省略時は `./output/<kebab-cased-new-name>` になります。
+
+以下の例は、`MyAwsomePage` という名称のプロジェクトを、 `MyNewProject` という名称に変換し、その場で生成します:
+
+```bash
+# 一時スキャフォールダーを生成して即座に新規プロジェクトを作成
+cat-doubler . MyAwsomePage --just-now MyNewProject
+
+# 生成先を明示する場合
+cat-doubler . MyAwsomePage --just-now MyNewProject -o ./apps/my-new-project
+```
+
+内部的には一時ディレクトリにスキャフォールダーを生成・一度だけ実行し、完了後にそのディレクトリを削除します。
 
 ---
 

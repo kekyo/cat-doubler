@@ -5,7 +5,7 @@
 
 /**
  * Deep merge two objects recursively.
- * Arrays are concatenated and deduplicated.
+ * Arrays from source replace target arrays entirely.
  * Objects are merged recursively.
  * Primitive values from source override target.
  */
@@ -20,21 +20,8 @@ export const deepMergeJson = (target: any, source: any): any => {
     return source;
   }
 
-  // Handle arrays
+  // Handle arrays: replace target with source entirely
   if (Array.isArray(source)) {
-    if (Array.isArray(target)) {
-      // Concatenate and deduplicate arrays
-      const merged = [...target, ...source];
-      // Simple deduplication for primitive values
-      return merged.filter((item, index, self) => {
-        if (typeof item === 'object' && item !== null) {
-          // For objects, keep all (no deduplication)
-          return true;
-        }
-        // For primitives, keep only first occurrence
-        return self.indexOf(item) === index;
-      });
-    }
     return source;
   }
 

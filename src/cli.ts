@@ -4,8 +4,8 @@
 // https://github.com/kekyo/cat-doubler
 
 import { Command } from 'commander';
-import { resolve } from 'path';
-import { access, stat } from 'fs/promises';
+import { resolve, join } from 'path';
+import { access, stat, mkdtemp, rm } from 'fs/promises';
 import { convertToTemplate } from './converter/templateConverter';
 import {
   description,
@@ -16,6 +16,8 @@ import {
 import { createConsoleLogger, LogLevel } from './utils/logger';
 import { generateCaseVariants } from './utils/caseUtils';
 import { initializeConfigFiles } from './utils/configInitializer';
+import { tmpdir } from 'os';
+import { spawn } from 'child_process';
 
 export const runCLI = (): void => {
   const program = new Command();
@@ -47,6 +49,10 @@ export const runCLI = (): void => {
       'Path to package.json override file (default: .catdoubler.package.json)'
     )
     .option(
+      '-j, --just-now <new-name>',
+      'Generate a temporary scaffolder and immediately create a new project with the given name (in PascalCase)'
+    )
+    .option(
       '--log-level <level>',
       'Set log level (debug, info, warn, error, ignore)',
       'info'
@@ -64,6 +70,7 @@ export const runCLI = (): void => {
           logLevel: string;
           ignoreInit?: boolean;
           clean?: boolean;
+          justNow?: string;
         }
       ) => {
         // Validate log level
@@ -133,24 +140,109 @@ export const runCLI = (): void => {
             process.exit(1);
           }
 
-          logger.info(`Converting "${sourceDir}" with symbol "${symbolName}"`);
-          logger.info(`Output directory: ${outputPath}`);
+          // Just-now flow: create temp scaffolder and immediately run it
+          if (options.justNow) {
+            const newProjectName = options.justNow;
 
-          // Perform the conversion
-          await convertToTemplate(
-            sourcePath,
-            symbolNameCaseVariants,
-            outputPath,
-            options.ignorePath,
-            options.packageJson,
-            logger,
-            options.clean !== false // Default to true unless --no-clean is specified
-          );
+            // Validate new project name (PascalCase)
+            if (!/^[A-Z][a-zA-Z0-9]*$/.test(newProjectName)) {
+              logger.error(
+                'Error: --just-now requires a PascalCase project name (e.g., MyProjectName)'
+              );
+              process.exit(1);
+            }
 
-          logger.info('Template generation completed successfully');
-          logger.info(`To use the generated template:`);
-          logger.info(`  cd ${options.output}`);
-          logger.info(`  node index.js`);
+            logger.info(
+              `Just-now mode: Will generate and run a temporary scaffolder.`
+            );
+            const tmpBase = await mkdtemp(join(tmpdir(), 'cat-doubler-'));
+            const tmpScaffolderPath = tmpBase; // convertToTemplate writes scaffolder into this dir
+
+            try {
+              logger.info(
+                `Converting "${sourceDir}" with symbol "${symbolName}" into temporary scaffolder...`
+              );
+              await convertToTemplate(
+                sourcePath,
+                symbolNameCaseVariants,
+                tmpScaffolderPath,
+                options.ignorePath,
+                options.packageJson,
+                logger,
+                true // always clean temp
+              );
+
+              // Determine project output directory for the generated project
+              const newNameVariants = generateCaseVariants(newProjectName);
+              const projectOutputDir = options.output
+                ? resolve(process.cwd(), options.output)
+                : resolve(
+                    process.cwd(),
+                    `./output/${newNameVariants.kebabCase}`
+                  );
+
+              logger.info(
+                `Running scaffolder to generate project "${newProjectName}" at: ${projectOutputDir}`
+              );
+
+              // Spawn the generated scaffolder
+              await new Promise<void>((resolveP, rejectP) => {
+                const cp = spawn(
+                  process.execPath,
+                  [
+                    './scaffolder.js',
+                    '--symbolName',
+                    newProjectName,
+                    '--outputDir',
+                    projectOutputDir,
+                  ],
+                  {
+                    cwd: tmpScaffolderPath,
+                    stdio: 'inherit',
+                  }
+                );
+                cp.on('close', (code) => {
+                  if (code === 0) resolveP();
+                  else
+                    rejectP(new Error(`scaffolder exited with code ${code}`));
+                });
+                cp.on('error', (err) => rejectP(err));
+              });
+
+              logger.info('Project generation completed successfully');
+            } finally {
+              // Cleanup temp directory
+              try {
+                await rm(tmpScaffolderPath, { recursive: true, force: true });
+                logger.debug('Temporary scaffolder directory cleaned up');
+              } catch (cleanupErr) {
+                logger.warn(
+                  `Warning: Failed to cleanup temporary directory: ${cleanupErr}`
+                );
+              }
+            }
+          } else {
+            // Normal flow: Generate scaffolder into output directory
+            logger.info(
+              `Converting "${sourceDir}" with symbol "${symbolName}"`
+            );
+            logger.info(`Output directory: ${outputPath}`);
+
+            await convertToTemplate(
+              sourcePath,
+              symbolNameCaseVariants,
+              outputPath,
+              options.ignorePath,
+              options.packageJson,
+              logger,
+              options.clean !== false // Default to true unless --no-clean is specified
+            );
+
+            logger.info('Template generation completed successfully');
+            logger.info(`To use the generated template:`);
+            logger.info(`  cd ${options.output}`);
+            logger.info(`  node index.js`);
+          }
         } catch (error) {
           logger.error(`Error during conversion: ${error}`);
           process.exit(1);

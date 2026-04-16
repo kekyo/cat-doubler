@@ -57,6 +57,9 @@ export const generateCliProject = async (
     camelCase: caseVariants.camelCase,
     placeholders, // Pass the actual placeholders to the template
     textFilePaths, // Pass the list of text file paths with placeholders
+    serializedTextFilePaths: textFilePaths
+      .map((filePath) => JSON.stringify(filePath))
+      .join(',\n  '),
     version,
     git_commit_hash,
   };

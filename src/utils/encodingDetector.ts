@@ -17,6 +17,19 @@ export interface FileEncodingResult {
   warning?: string;
 }
 
+const isValidUtf8Text = (content: Buffer): boolean => {
+  if (content.length === 0) {
+    return true;
+  }
+
+  try {
+    new TextDecoder('utf-8', { fatal: true }).decode(content);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // UTF-8 required by specification
 const UTF8_SPEC_REQUIRED_EXTENSIONS = [
   '.json', // RFC 8259
@@ -231,29 +244,27 @@ export const detectFileEncoding = async (
       };
     }
 
-    // Check if UTF-8 compatible
+    // Check if UTF-8 compatible based on detection result first
     let isUtf8Compatible =
       detectedEncoding === 'UTF-8' ||
       detectedEncoding === 'UTF-8-SIG' ||
       detectedEncoding === 'ascii' ||
       detectedEncoding === 'ASCII';
 
-    // Special handling for ISO-8859-1: check if it's actually pure ASCII
-    if (!isUtf8Compatible && detectedEncoding === 'ISO-8859-1') {
+    // Validate the actual byte sequence before rejecting the file.
+    if (!isUtf8Compatible) {
       try {
         const content = await readFile(filePath);
-        // Check if all bytes are ASCII (< 128)
-        const isPureAscii = !content.some((byte) => byte > 127);
-        if (isPureAscii) {
-          // Pure ASCII is UTF-8 compatible
+        if (isValidUtf8Text(content)) {
           isUtf8Compatible = true;
           logger.debug(
-            `File ${filePath} detected as ISO-8859-1 but is pure ASCII, treating as UTF-8 compatible`
+            `File ${filePath} detected as ${detectedEncoding} but byte sequence is valid UTF-8, treating as UTF-8 compatible`
           );
         }
       } catch (err) {
-        // If we can't read the file, keep original detection
-        logger.debug(`Could not verify ISO-8859-1 file ${filePath}: ${err}`);
+        logger.debug(
+          `Could not verify UTF-8 compatibility for ${filePath}: ${err}`
+        );
       }
     }
 
@@ -276,7 +287,7 @@ export const detectFileEncoding = async (
     logger.debug(`File ${filePath} detected as ${detectedEncoding}`);
     return {
       isTextFile: true,
-      encoding: detectedEncoding,
+      encoding: isUtf8Compatible ? 'UTF-8' : detectedEncoding,
       confidence: 1.0,
       requiresTemplating: true,
     };

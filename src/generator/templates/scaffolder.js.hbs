@@ -280,7 +280,8 @@ Examples:
   
   // Copy and transform files
   try {
-    await copyAndTransform('./templates', outputDir, replacements);
+    const templatesDir = path.join(scriptDir, 'templates');
+    await copyAndTransform(templatesDir, outputDir, replacements);
     console.log(`Project successfully generated at ${outputDir}`);
   } catch (error) {
     console.error(`Error: ${error.message}`);

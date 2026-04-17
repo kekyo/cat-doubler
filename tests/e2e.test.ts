@@ -473,6 +473,67 @@ const fooBarApp = new FooBarApp();
       expect(generatedReadme).not.toContain('__');
     });
 
+    it('should generate a project when launched from outside the scaffolder directory', async () => {
+      await writeFile(
+        join(sourceDir, 'package.json'),
+        JSON.stringify(
+          {
+            name: 'foo-bar-app',
+            version: '1.0.0',
+          },
+          null,
+          2
+        )
+      );
+
+      await mkdir(join(sourceDir, 'src'), { recursive: true });
+      await writeFile(
+        join(sourceDir, 'src', 'FooBarApp.js'),
+        `export class FooBarApp {
+  name = 'FooBarApp';
+}`
+      );
+
+      const caseVariants = generateCaseVariants('FooBarApp');
+      await convertToTemplate(
+        sourceDir,
+        caseVariants,
+        outputDir,
+        undefined,
+        undefined,
+        mockLogger
+      );
+
+      const { stdout, stderr } = await execAsync(
+        'node ./output/scaffolder.js --symbolName MyOutsideRunProject --outputDir ./generated-outside',
+        {
+          cwd: testDir,
+          timeout: 30000,
+        }
+      );
+
+      expect(stderr).toBe('');
+      expect(stdout).toContain('Project successfully generated');
+
+      const generatedProjectDir = join(testDir, 'generated-outside');
+      await access(generatedProjectDir, constants.F_OK);
+
+      const generatedPackageJson = await readFile(
+        join(generatedProjectDir, 'package.json'),
+        'utf-8'
+      );
+      expect(JSON.parse(generatedPackageJson).name).toBe(
+        'my-outside-run-project'
+      );
+
+      const generatedMainFile = await readFile(
+        join(generatedProjectDir, 'src', 'MyOutsideRunProject.js'),
+        'utf-8'
+      );
+      expect(generatedMainFile).toContain('class MyOutsideRunProject');
+      expect(generatedMainFile).not.toContain('FooBarApp');
+    });
+
     it('should handle interactive mode correctly', async () => {
       // Create a minimal project
       await writeFile(

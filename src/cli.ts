@@ -253,7 +253,7 @@ export const runCLI = (): void => {
             logger.info('Template generation completed successfully');
             logger.info(`To use the generated template:`);
             logger.info(`  cd ${options.output}`);
-            logger.info(`  node index.js`);
+            logger.info(`  node scaffolder.js`);
           }
         } catch (error) {
           logger.error(`Error during conversion: ${error}`);

@@ -749,6 +749,8 @@ export class FooBarApp {
       expect(indexJs).toContain('"README.md"');
       expect(indexJs).toContain('"LICENSE"');
       expect(indexJs).toContain('"Makefile"');
+      expect(indexJs).not.toContain('"src\\__pascal1__\\index.ts"');
+      expect(indexJs).toContain('path.posix.join');
 
       // Binary files should NOT be in TEXT_FILE_PATHS
       expect(indexJs).not.toContain('"assets/logo.png"');

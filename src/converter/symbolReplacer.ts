@@ -171,7 +171,8 @@ export const replaceSymbolInPath = (
   logger: Logger
 ): string => {
   // Split path into segments
-  const segments = path.split('/');
+  const normalizedPath = path.replace(/\\/g, '/');
+  const segments = normalizedPath.split('/');
   const transformedSegments = segments.map((segment) => {
     // Check each variant in the segment
     const variantToPlaceholder: Record<

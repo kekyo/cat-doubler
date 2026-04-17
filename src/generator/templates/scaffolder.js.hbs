@@ -133,9 +133,7 @@ const toUpperCase = (str) => {
 
 // Text file paths embedded at build time (with placeholders)
 const TEXT_FILE_PATHS = new Set([
-  {{#each textFilePaths}}
-  "{{this}}",
-  {{/each}}
+  {{{serializedTextFilePaths}}}
 ]);
 
 // File transformation logic
@@ -153,7 +151,9 @@ const copyAndTransform = async (src, dest, replacements, parentPath = '') => {
     const srcPath = path.join(src, entry.name);
     
     // Build the template-relative path (with placeholders)
-    const templateRelativePath = parentPath ? path.join(parentPath, entry.name) : entry.name;
+    const templateRelativePath = parentPath ?
+      path.posix.join(parentPath, entry.name) :
+      entry.name;
     
     // Check if it's a text file using the embedded paths (before transformation)
     const isText = TEXT_FILE_PATHS.has(templateRelativePath);

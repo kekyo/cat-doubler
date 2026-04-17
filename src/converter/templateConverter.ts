@@ -12,6 +12,9 @@ import { findSafePlaceholders } from './placeholderDetector';
 import { generateCliProject } from '../generator/cliProjectGenerator';
 import { Logger } from '../utils/logger';
 
+const normalizeTemplatePath = (filePath: string): string =>
+  filePath.replace(/\\/g, '/');
+
 export const convertToTemplate = async (
   sourcePath: string,
   symbolNameCaseVariants: CaseVariants,
@@ -112,11 +115,13 @@ export const convertToTemplate = async (
     const batchResults = await Promise.all(
       batch.map(async (file) => {
         // Determine the template path (with potential symbol replacement)
-        const templateRelativePath = replaceSymbolInPath(
-          file.relativePath,
-          symbolNameCaseVariants,
-          placeholders,
-          logger
+        const templateRelativePath = normalizeTemplatePath(
+          replaceSymbolInPath(
+            file.relativePath,
+            symbolNameCaseVariants,
+            placeholders,
+            logger
+          )
         );
         const templatePath = join(templatesDir, templateRelativePath);
 
@@ -153,7 +158,7 @@ export const convertToTemplate = async (
           }
 
           return {
-            originalPath: file.relativePath,
+            originalPath: normalizeTemplatePath(file.relativePath),
             templatePath: templateRelativePath,
             outputPath: templateRelativePath,
             isTemplate,
@@ -167,7 +172,7 @@ export const convertToTemplate = async (
           logger.debug(`  Copied: ${file.relativePath}`);
 
           return {
-            originalPath: file.relativePath,
+            originalPath: normalizeTemplatePath(file.relativePath),
             templatePath: templateRelativePath,
             outputPath: templateRelativePath,
             isTemplate: false,
